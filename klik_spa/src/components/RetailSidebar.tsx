@@ -1,9 +1,11 @@
+import { useBranding } from "../hooks/useBranding"
 import { Receipt, Grid3X3, BarChart3, Users, MonitorX } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useUserInfo } from "../hooks/useUserInfo"
 
 // Inside your component
 export default function RetailSidebar() {
+  const branding = useBranding()
   const navigate = useNavigate()
   const location = useLocation()
   const { userInfo } = useUserInfo()
@@ -15,6 +17,7 @@ export default function RetailSidebar() {
      { icon: Receipt, path: "/invoice", label: "InvoiceHistory" },
      { icon: Users, path: "/customers", label: "Customers" },
     { icon: BarChart3, path: "/dashboard", label: "Dashboard", requiresSalesDashboard: true },
+    { icon: Grid3X3, path: "/setup", label: "ABS Setup" },
     { icon: MonitorX, path: "/closing_shift", label: "Closing Shift" },
 
   ]
@@ -39,8 +42,8 @@ export default function RetailSidebar() {
           onClick={() => navigate("/")}
         >
           <img
-            src="/assets/klik_pos/klik_spa/bev_logo.jpeg"
-            alt="KLiK PoS"
+            src={branding.logo || "/assets/klik_pos/klik_spa/abs-logo.svg"}
+            alt={branding.business_name}
             className="w-12 h-12 rounded-full object-cover"
           />
         </div>

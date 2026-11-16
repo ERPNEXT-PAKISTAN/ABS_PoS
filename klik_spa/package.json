@@ -8,7 +8,8 @@
     "build": "vite build --base=/assets/klik_pos/klik_spa/ && yarn copy-html-entry",
     "lint": "eslint .",
     "preview": "vite preview",
-    "copy-html-entry": "cp ../klik_pos/public/klik_spa/index.html ../klik_pos/www/klik_spa.html"
+    "copy-html-entry": "cp ../klik_pos/public/klik_spa/index.html ../klik_pos/www/klik_spa.html",
+    "test:checkout": "node tests/checkoutIdentity.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.14",

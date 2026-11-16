@@ -1,4 +1,6 @@
+import { useCartStore } from "../stores/cartStore";
 
+import { prepareCheckout, finishCheckout, rejectCheckout } from "./checkoutIdentity";
 import { extractErrorMessage } from "../utils/errorExtraction";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,6 +72,7 @@ export async function previewSalesInvoice(data: any): Promise<InvoicePreview> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createSalesInvoice(data: any) {
   const csrfToken = window.csrf_token;
+  const checkout = prepareCheckout({ ...data, checkoutCartId: data.checkoutCartId || useCartStore.getState().cartId, checkoutProfile: data.checkoutProfile || useCartStore.getState().profileName });
 
   const response = await fetch('/api/method/klik_pos.api.sales_invoice.create_and_submit_invoice', {
     method: 'POST',
@@ -77,18 +80,28 @@ export async function createSalesInvoice(data: any) {
       'Content-Type': 'application/json',
       'X-Frappe-CSRF-Token': csrfToken
     },
-    body: JSON.stringify({ data }),
+    body: JSON.stringify({ data: checkout }),
     credentials: 'include'
+  }).catch(error => {
+    window.dispatchEvent(new Event('abs-checkout-uncertain'));
+    throw error;
   });
 
-  const result = await response.json();
+  const result = await response.json().catch(error => {
+    window.dispatchEvent(new Event('abs-checkout-uncertain'));
+    throw error;
+  });
 
 
   if (!response.ok || !result.message || result.message.success === false) {
     const errorMessage = extractErrorMessage(result, 'Failed to create invoice');
+    // Structured failure means this attempt did not submit; transport errors retain the ID.
+    if (result.message?.success === false || response.status === 403 || response.status === 417) rejectCheckout();
+    if (!result.message || result.message.success !== false) window.dispatchEvent(new Event('abs-checkout-uncertain'));
     throw new Error(errorMessage);
   }
 
+  finishCheckout(result.message.invoice_name);
   return result.message;
 }
 

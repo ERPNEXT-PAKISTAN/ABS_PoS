@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+import ABSSetup from "../components/ABSSetup";
 import LoginPage from "../pages/LoginPage";
 import POSPage from "../pages/POSPage";
 import DashboardPage from "../pages/DashboardPage";
@@ -74,6 +75,7 @@ const router = createBrowserRouter([
         path: "mobile/payment",
         element: <ProtectedRoute element={<MobilePaymentPage />} />,
       },
+      { path: "setup", element: <ProtectedRoute element={<div className="lg:ml-20 p-6 pb-20 max-w-5xl"><ABSSetup /></div>} /> },
       {
         path: "settings",
         element: <ProtectedRoute element={<SettingsPage />} />,

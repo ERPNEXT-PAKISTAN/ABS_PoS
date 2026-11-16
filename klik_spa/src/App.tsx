@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import CartRecovery from "./components/CartRecovery";
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { ThemeProvider } from "./hooks/useTheme";
@@ -22,6 +23,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <CartRecovery>
         <ThemeProvider>
           <I18nProvider>
             <ProductProvider>
@@ -32,6 +34,7 @@ function App() {
             </ProductProvider>
           </I18nProvider>
         </ThemeProvider>
+        </CartRecovery>
       </AuthProvider>
     </QueryClientProvider>
   );

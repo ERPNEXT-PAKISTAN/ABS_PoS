@@ -112,7 +112,6 @@ class ERPNextAPI {
       });
 
       console.log('Login response status:', response.status);
-      console.log('Login response headers:', Object.fromEntries(response.headers.entries()));
 
       // If 404, try alternative endpoint
       if (response.status === 404) {
@@ -157,7 +156,6 @@ class ERPNextAPI {
       }
 
       const data = await response.json();
-      console.log('Login response data:', data);
 
       // Frappe 2FA challenge response
       if (data?.tmp_id && data?.verification) {
@@ -179,7 +177,6 @@ class ERPNextAPI {
           if (sidMatch && sidMatch[1]) {
             this.sessionId = sidMatch[1];
             localStorage.setItem('erpnext_sid', this.sessionId);
-            console.log('Session ID stored:', this.sessionId);
           }
         }
 
@@ -187,7 +184,6 @@ class ERPNextAPI {
         try {
           console.log('Fetching user profile data...');
           const userProfile = await this.getCurrentUserProfile();
-          console.log('User profile fetched:', userProfile);
 
           if (userProfile) {
             return {
@@ -431,7 +427,6 @@ class ERPNextAPI {
     };
 
     try {
-      console.log('Making API call:', { url, options: defaultOptions });
       const response = await fetch(url, defaultOptions);
 
       if (!response.ok) {
@@ -559,7 +554,7 @@ class ERPNextAPI {
     const storedSid = localStorage.getItem('erpnext_sid');
     if (storedSid) {
       this.sessionId = storedSid;
-      console.log('Session restored from localStorage:', storedSid);
+      // Session identifiers must never be logged.
     }
   }
 }

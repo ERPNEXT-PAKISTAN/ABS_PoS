@@ -1,0 +1,47 @@
+{
+ "doctype": "DocType",
+ "name": "ABS POS Settings",
+ "module": "KLiK PoS",
+ "issingle": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "business_name",
+  "logo",
+  "support_email",
+  "receipt_footer"
+ ],
+ "fields": [
+  {
+   "fieldname": "business_name",
+   "label": "POS Name",
+   "fieldtype": "Data",
+   "default": "ABS PoS",
+   "reqd": 1
+  },
+  {
+   "fieldname": "logo",
+   "label": "Logo",
+   "fieldtype": "Attach Image"
+  },
+  {
+   "fieldname": "support_email",
+   "label": "Support Email",
+   "fieldtype": "Data",
+   "options": "Email"
+  },
+  {
+   "fieldname": "receipt_footer",
+   "label": "Receipt Footer",
+   "fieldtype": "Small Text"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "track_changes": 1
+}

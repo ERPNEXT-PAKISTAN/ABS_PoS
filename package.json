@@ -4,7 +4,7 @@
   "description": "KLiK PoS: A Modern Point of Sale for your Business",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "yarn --cwd klik_spa test:checkout",
     "postinstall": "cd klik_spa && yarn install",
     "dev": "cd klik_spa && yarn dev",
     "build": "cd klik_spa && yarn build"

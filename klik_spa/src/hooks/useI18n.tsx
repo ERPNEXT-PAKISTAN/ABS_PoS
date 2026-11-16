@@ -54,7 +54,7 @@ const translations = {
     CONFIRM_PAYMENT: "Confirm Payment",
 
     // Offline
-    OFFLINE_MESSAGE: "You are offline. New orders will sync when you're back online.",
+    OFFLINE_MESSAGE: "You are offline. Your cart is saved on this device. Reconnect before completing payment.",
 
     // Errors
     INVOICE_NOT_FOUND: "Invoice not found",
@@ -101,7 +101,7 @@ const translations = {
     CONFIRM_PAYMENT: "تأكيد الدفع",
 
     // Offline
-    OFFLINE_MESSAGE: "أنت غير متصل. سيتم مزامنة الطلبات عند عودتك للإنترنت.",
+    OFFLINE_MESSAGE: "أنت غير متصل. تم حفظ السلة على هذا الجهاز. أعد الاتصال قبل إتمام الدفع.",
 
     // Errors
     INVOICE_NOT_FOUND: "الفاتورة غير موجودة",

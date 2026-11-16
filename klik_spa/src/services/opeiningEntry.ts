@@ -44,6 +44,7 @@ export function useCreatePOSOpeningEntry(): UseCreateOpeningReturn {
       const data = await res.json();
 
       if (res.ok && data.message) {
+        window.dispatchEvent(new Event("abs-profile-changed"));
         setSuccess(true);
       } else {
         throw new Error(data._server_messages || "Failed to create opening entry");

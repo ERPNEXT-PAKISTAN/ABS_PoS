@@ -270,7 +270,7 @@ def fetch_item_price(
 		return {"price": 0, "currency": "SAR", "currency_symbol": "SAR"}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_item_price_for_customer(item_code, customer=None, uom=None):
 	"""
 	Get item price for a specific customer using customer-first price list priority.
@@ -305,7 +305,7 @@ def get_item_price_for_customer(item_code, customer=None, uom=None):
 		}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_item_by_barcode(barcode: str):
 	"""Get item details by barcode."""
 	try:
@@ -361,7 +361,7 @@ def get_item_by_barcode(barcode: str):
 		frappe.throw(_("Error fetching item by barcode: {0}").format(str(e)))
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_item_by_identifier(code: str):
 	"""Resolve an item by barcode, batch number or serial number.
 	Returns same structure as get_item_by_barcode."""
@@ -599,7 +599,7 @@ def _fetch_batch_prices(item_codes: list, price_list: str | None, uom_map: dict)
 	return price_map
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_items_with_balance_and_price(
 	limit: int = 1000,
 	offset: int = 0,
@@ -859,7 +859,7 @@ def get_items_with_balance_and_price(
 		frappe.throw(_("Something went wrong while fetching item data."))
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_stock_updates():
 	"""Get only stock updates for all items - lightweight endpoint with early filtering."""
 	pos_doc = None
@@ -936,7 +936,7 @@ def get_stock_updates():
 		return {}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_item_stock(item_code: str):
 	"""Get stock for a specific item - for individual updates."""
 	pos_doc = get_current_pos_profile()
@@ -950,7 +950,7 @@ def get_item_stock(item_code: str):
 		return {"item_code": item_code, "available": 0}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_items_stock_batch(item_codes: str):
 	"""Get stock for multiple specific items - optimized batch update with early filtering."""
 	pos_doc = get_current_pos_profile()
@@ -972,7 +972,7 @@ def get_items_stock_batch(item_codes: str):
 		return {}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_item_groups_for_pos():
 	try:
 		pos_profile = get_current_pos_profile()
@@ -1154,7 +1154,7 @@ def get_item_uoms_and_prices(item_code, customer=None):
 		}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_serial_nos_for_item(item_code: str):
 	"""
 	Returns a list of available Serial Nos for a given item (and POS warehouse if set).
@@ -1191,7 +1191,7 @@ def get_serial_nos_for_item(item_code: str):
 		return []
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def apply_pricing_rules_to_cart(cart_items, customer=None):
 	"""
 	Apply ERPNext pricing rules to cart items.

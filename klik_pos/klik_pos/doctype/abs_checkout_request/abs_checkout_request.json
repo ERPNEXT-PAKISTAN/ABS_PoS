@@ -1,0 +1,51 @@
+{
+ "doctype": "DocType",
+ "name": "ABS Checkout Request",
+ "module": "KLiK PoS",
+ "issingle": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "request_hash",
+  "response_json",
+  "pos_profile",
+  "company"
+ ],
+ "fields": [
+  {
+   "fieldname": "request_hash",
+   "label": "Payload Hash",
+   "fieldtype": "Data",
+   "reqd": 1
+  },
+  {
+   "fieldname": "response_json",
+   "label": "Response",
+   "fieldtype": "Long Text"
+  },
+  {
+   "fieldname": "pos_profile",
+   "label": "POS Profile",
+   "fieldtype": "Link",
+   "options": "POS Profile",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "label": "Company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "reqd": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "track_changes": 1,
+ "autoname": "hash",
+ "allow_rename": 0
+}

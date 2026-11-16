@@ -134,6 +134,8 @@ def get_pos_details():
 	else:
 		pos = get_current_pos_profile()
 
+	from klik_pos.api.access import require_profile
+	pos = require_profile(pos.name)
 	business_type = pos.custom_business_type
 	print_format = pos.custom_pos_printformat
 
@@ -182,9 +184,5 @@ def get_pos_details():
 
 
 def is_zatca_enabled():
-	pos_profile = get_current_pos_profile()
-	company = pos_profile.company
-	# meta = frappe.get_meta("Company")  # unused
-	if frappe.db.has_column("Company", "custom_enable_zatca_e_invoicing"):
-		return frappe.db.get_value("Company", company, "custom_enable_zatca_e_invoicing") == 1
-	return False
+	from klik_pos.api.setup import zatca_state
+	return zatca_state(get_current_pos_profile().company)['enabled']

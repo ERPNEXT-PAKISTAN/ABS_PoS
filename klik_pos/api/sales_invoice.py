@@ -41,7 +41,7 @@ def get_current_pos_opening_entry():
 		return None
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_sales_invoices(limit=100, start=0, search="", skip_opening_entry_filter=False, cashier_name=None, submitted_only=False):
 	"""
 	Get sales invoices with proper filtering based on user role and POS opening entry.
@@ -70,10 +70,15 @@ def get_sales_invoices(limit=100, start=0, search="", skip_opening_entry_filter=
 			skip_opening_entry_filter=skip_opening_entry_filter, cashier_user_ids=cashier_user_ids, submitted_only=submitted_only
 		)
 
+		from klik_pos.api.access import is_manager
+		if not is_manager():
+			from klik_pos.api.pos_profile import get_pos_profiles_for_user
+			filters["pos_profile"] = ["in", [p["name"] for p in get_pos_profiles_for_user()]]
+			filters["owner"] = frappe.session.user
 		# Build search filters
 		or_filters = _build_search_filters(search)
 
-		invoices = frappe.get_all(
+		invoices = frappe.get_list(
 			"Sales Invoice",
 			filters=filters,
 			or_filters=or_filters,
@@ -83,7 +88,7 @@ def get_sales_invoices(limit=100, start=0, search="", skip_opening_entry_filter=
 			start=start,
 		)
 
-		count_rows = frappe.get_all(
+		count_rows = frappe.get_list(
 			"Sales Invoice", filters=filters, or_filters=or_filters, fields=[{"COUNT": "name", "as": "total"}]
 		)
 		total_count = count_rows[0].total if count_rows else 0
@@ -366,13 +371,15 @@ def _calculate_return_quantities(invoice, items):
 		item["available_qty"] = round(item["qty"] - returned_qty_value, 6)
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_invoice_details(invoice_id):
 	"""
 	Main function to fetch complete invoice details.
 	"""
 	try:
 		invoice = frappe.get_doc("Sales Invoice", invoice_id)
+		from klik_pos.api.access import require_invoice
+		require_invoice(invoice)
 		invoice_data = invoice.as_dict()
 
 		# Get items with return data
@@ -512,8 +519,31 @@ def _get_address_and_customer_info(invoice):
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_and_submit_invoice(data):
+	from klik_pos.api.access import validate_checkout
+	from klik_pos.api.checkout import run_checkout
+	if isinstance(data, str):
+		data = json.loads(data)
+	if not isinstance(data, dict):
+		frappe.throw(_("Invalid checkout payload."))
+	profile = _get_active_pos_profile()
+	def create(payload):
+		if payload.get('checkoutProfile') != profile.name:
+			frappe.throw(_("The active counter changed. Review the cart in the correct POS Profile before checkout."))
+		validate_checkout(payload, profile)
+		from klik_pos.api.setup import zatca_state
+		if zatca_state(profile.company)['state'] == 'Unavailable':
+			frappe.throw(_("ZATCA is enabled for this company but its integration app is unavailable. Contact your administrator."))
+		return _create_and_submit_invoice(payload)
+	result = run_checkout(data, profile, create)
+	if result.get('success'):
+		from klik_pos.api.access import require_invoice
+		require_invoice(frappe.get_doc('Sales Invoice', result['invoice_name']))
+	return result
+
+
+def _create_and_submit_invoice(data):
 	try:
 		import time
 
@@ -563,11 +593,14 @@ def create_and_submit_invoice(data):
 
 		# Save then submit; if submit fails (e.g. negative stock), delete the draft and return error
 		# (do not re-raise: Frappe would rollback the transaction and undo the delete)
-		doc.save(ignore_permissions=True)
+		doc.save()
 
 		# Pricing rules are re-applied on save, so the server total can differ from what the
 		# cashier collected. Never submit a POS invoice whose payments don't match its total.
 		payment_mismatch = _get_payment_mismatch(doc, business_type)
+		if not _get_active_pos_profile().get("custom_allow_credit_sales") and flt(amount_paid) + PAYMENT_TOLERANCE < flt(doc.grand_total):
+			frappe.db.rollback()
+			return {"success": False, "message": _("Credit sales are disabled in this POS Profile.")}
 		if payment_mismatch:
 			frappe.db.rollback()
 			return payment_mismatch
@@ -626,6 +659,7 @@ def create_and_submit_invoice(data):
 		}
 
 	except Exception as e:
+		frappe.db.rollback()
 		frappe.log_error(frappe.get_traceback(), "Submit Invoice Error")
 		return {"success": False, "message": str(e)}
 
@@ -744,8 +778,12 @@ def preview_invoice(data):
 		return {"success": False, "message": str(e)}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_draft_invoice(data):
+	from klik_pos.api.access import validate_checkout
+	if isinstance(data, str):
+		data = json.loads(data)
+	validate_checkout(data, _get_active_pos_profile())
 	try:
 		(
 			customer,
@@ -770,7 +808,7 @@ def create_draft_invoice(data):
 			coupon_discount=_get_coupon_discount(data),
 		)
 		set_grand_total_with_roundoff(doc, None)
-		doc.insert(ignore_permissions=True)
+		doc.insert()
 
 		return {"success": True, "invoice_name": doc.name, "invoice": doc}
 
@@ -788,8 +826,9 @@ def parse_invoice_data(data):
 	items = data.get("items", [])
 
 	amount_paid = 0.0
-	sales_and_tax_charges = get_current_pos_profile().taxes_and_charges
-	business_type = data.get("businessType")
+	profile = _get_active_pos_profile()
+	sales_and_tax_charges = profile.taxes_and_charges
+	business_type = profile.custom_business_type
 	mode_of_payment = None
 
 	# Extract round-off data from frontend
@@ -799,14 +838,16 @@ def parse_invoice_data(data):
 	if roundoff_amount != 0:
 		_roundoff_account = get_writeoff_account()
 
-	if data.get("amountPaid"):
-		amount_paid = data.get("amountPaid")
-
 	if data.get("paymentMethods"):
 		mode_of_payment = data.get("paymentMethods")
+		amount_paid = sum(flt(row.get('amount')) for row in mode_of_payment)
 
 	if data.get("SalesTaxCharges"):
-		sales_and_tax_charges = data.get("SalesTaxCharges")
+		template = frappe.get_doc("Sales Taxes and Charges Template", data["SalesTaxCharges"])
+		template.check_permission("read")
+		if template.company != profile.company:
+			frappe.throw(_("Tax template belongs to another company."))
+		sales_and_tax_charges = template.name
 
 	# Extract delivery personnel
 	delivery_personnel = data.get("deliveryPersonnel")
@@ -899,10 +940,12 @@ def _get_active_pos_profile():
 	try:
 		if selected_pos_profile_name:
 			pos_profile_doc = frappe.get_doc("POS Profile", selected_pos_profile_name)
-			return pos_profile_doc
+			from klik_pos.api.access import require_profile
+			return require_profile(pos_profile_doc.name)
 		else:
 			fallback_profile = get_current_pos_profile()
-			return fallback_profile
+			from klik_pos.api.access import require_profile
+			return require_profile(fallback_profile.name)
 	except Exception:
 		frappe.logger().error(f"Error getting POS Profile: {frappe.get_traceback()}")
 		frappe.logger().error(f"Attempted to get profile: {selected_pos_profile_name}")
@@ -1142,9 +1185,9 @@ def _batch_fetch_item_data(item_codes):
 		SELECT name, has_batch_no, has_serial_no
 		FROM `tabItem`
 		WHERE name IN ({})
-	""".format(",".join([f"'{code}'" for code in item_codes]))
+	""".format(",".join(["%s"] * len(item_codes)))
 
-	item_results = frappe.db.sql(item_query, as_dict=True)
+	item_results = frappe.db.sql(item_query, tuple(item_codes), as_dict=True)
 	return {item.name: item for item in item_results}
 
 
@@ -1237,6 +1280,7 @@ def _prepare_item_data(item, item_data_map, pos_profile):
 	price_list_rate = _get_price_list_rate_for_uom(
 		item_code, item.get("uom"), getattr(pos_profile, "selling_price_list", None)
 	)
+	configured_price = price_list_rate
 	if price_list_rate is None:
 		
 		selected_uom = item.get("uom")
@@ -1246,6 +1290,10 @@ def _prepare_item_data(item, item_data_map, pos_profile):
 		else:
 			price_list_rate = rate
 
+	if not pos_profile.allow_rate_change:
+		if configured_price is None:
+			frappe.throw(_("No selling price is configured for item {0} and its UOM.").format(item_code))
+		rate = _apply_manual_discount(flt(price_list_rate), discount_percentage, discount_amount)
 	# Build base item data
 	item_data = {
 		"item_code": item_code,
@@ -1522,10 +1570,14 @@ def _set_return_discount(return_doc, original_invoice):
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def return_sales_invoice(invoice_name):
 	try:
 		original_invoice = frappe.get_doc("Sales Invoice", invoice_name)
+		from klik_pos.api.access import require_invoice
+		profile = require_invoice(original_invoice, "write")
+		if original_invoice.docstatus == 1 and not profile.get("custom_allow_return"):
+			frappe.throw(_("Returns are disabled in this POS Profile."))
 
 		if original_invoice.docstatus != 1:
 			frappe.throw("Only submitted invoices can be returned.")
@@ -1552,6 +1604,10 @@ def return_sales_invoice(invoice_name):
 
 		return_doc.is_return = 1
 		return_doc.posting_date = frappe.utils.nowdate()
+		opening = get_current_pos_opening_entry()
+		if not opening or frappe.db.get_value('POS Opening Entry', opening, 'pos_profile') != profile.name:
+			frappe.throw(_("Open a shift for this POS Profile before making a return."))
+		return_doc.custom_pos_opening_entry = opening
 
 		for item in return_doc.items:
 			item.qty = -abs(item.qty)
@@ -1587,7 +1643,7 @@ def return_sales_invoice(invoice_name):
 
 		# Payment sync will be handled after save so totals include write-off adjustments
 
-		return_doc.save(ignore_permissions=True)
+		return_doc.save()
 
 		# After save (totals finalized by validate), sync payments to match grand/rounded total
 		if getattr(return_doc, "custom_roundoff_amount", 0):
@@ -1615,7 +1671,7 @@ def return_sales_invoice(invoice_name):
 			return_doc.paid_amount = -desired_payment
 			return_doc.base_paid_amount = -desired_payment * (return_doc.conversion_rate or 1)
 			return_doc.outstanding_amount = 0
-			return_doc.save(ignore_permissions=True)
+			return_doc.save()
 
 		return_doc.submit()
 
@@ -2260,7 +2316,7 @@ def get_customer_invoices_for_return(customer, start_date=None, end_date=None, s
 		return {"success": False, "error": str(e)}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_partial_return(
 	invoice_name, return_items, payment_method=None, return_amount=None, expected_return_amount=None
 ):
@@ -2271,6 +2327,10 @@ def create_partial_return(
 			return_items = json.loads(return_items)
 
 		original_invoice = frappe.get_doc("Sales Invoice", invoice_name)
+		from klik_pos.api.access import require_invoice
+		profile = require_invoice(original_invoice, "write")
+		if original_invoice.docstatus == 1 and not profile.get("custom_allow_return"):
+			frappe.throw(_("Returns are disabled in this POS Profile."))
 
 		if original_invoice.docstatus != 1:
 			frappe.throw("Only submitted invoices can be returned.")
@@ -2297,6 +2357,10 @@ def create_partial_return(
 
 		return_doc.is_return = 1
 		return_doc.posting_date = frappe.utils.nowdate()
+		opening = get_current_pos_opening_entry()
+		if not opening or frappe.db.get_value('POS Opening Entry', opening, 'pos_profile') != profile.name:
+			frappe.throw(_("Open a shift for this POS Profile before making a return."))
+		return_doc.custom_pos_opening_entry = opening
 		return_doc.custom_delivery_date = frappe.utils.nowdate()
 
 		# Set the current POS opening entry
@@ -2463,7 +2527,7 @@ def create_partial_return(
 		# 	for _p in return_doc.payments[1:]:
 		# 		_p.amount = 0
 
-		return_doc.save(ignore_permissions=True)
+		return_doc.save()
 		return_doc.submit()
 
 		return {
@@ -2477,7 +2541,7 @@ def create_partial_return(
 		return {"success": False, "message": str(e)}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_multi_invoice_return(return_data):
 	"""Create multiple return invoices for items from different invoices"""
 	try:
@@ -2547,7 +2611,7 @@ def delete_draft_invoices_for_opening_entry(opening_entry_name):
 		return 0
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete_draft_invoice(invoice_id):
 	"""
 	Delete a draft sales invoice.
@@ -2556,6 +2620,10 @@ def delete_draft_invoice(invoice_id):
 	try:
 		# Get the invoice document
 		invoice_doc = frappe.get_doc("Sales Invoice", invoice_id)
+		from klik_pos.api.access import require_invoice
+		profile = require_invoice(invoice_doc, "write")
+		if invoice_doc.docstatus == 1 and not profile.get("custom_allow_return"):
+			frappe.throw(_("Returns are disabled in this POS Profile."))
 
 		if invoice_doc.status != "Draft":
 			return {
@@ -2577,7 +2645,7 @@ def delete_draft_invoice(invoice_id):
 		return {"success": False, "error": str(e)}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit_draft_invoice(invoice_id):
 	"""
 	Submit a draft sales invoice directly without payment dialog.
@@ -2585,6 +2653,10 @@ def submit_draft_invoice(invoice_id):
 	"""
 	try:
 		invoice_doc = frappe.get_doc("Sales Invoice", invoice_id)
+		from klik_pos.api.access import require_invoice
+		profile = require_invoice(invoice_doc, "write")
+		if invoice_doc.docstatus == 1 and not profile.get("custom_allow_return"):
+			frappe.throw(_("Returns are disabled in this POS Profile."))
 
 		if invoice_doc.status != "Draft":
 			return {
@@ -2592,6 +2664,20 @@ def submit_draft_invoice(invoice_id):
 				"error": f"Cannot submit invoice {invoice_id}. Only Draft invoices can be submitted. Current status: {invoice_doc.status}",
 			}
 
+		from klik_pos.api.access import validate_checkout
+		from klik_pos.api.setup import zatca_state
+		if invoice_doc.is_return:
+			frappe.throw(_("Use the return workflow to submit a refund."))
+		validate_checkout({
+			'items': [{'quantity': item.qty} for item in invoice_doc.items],
+			'paymentMethods': [{'method': row.mode_of_payment, 'amount': row.amount} for row in invoice_doc.payments],
+			'amountPaid': invoice_doc.paid_amount,
+			'roundOffAmount': invoice_doc.get('custom_roundoff_amount') or 0,
+		}, profile)
+		if zatca_state(profile.company)['state'] == 'Unavailable':
+			frappe.throw(_("ZATCA is enabled but the integration app is unavailable."))
+		if not profile.get('custom_allow_credit_sales') and flt(invoice_doc.paid_amount) + PAYMENT_TOLERANCE < flt(invoice_doc.grand_total):
+			frappe.throw(_("Credit sales are disabled in this POS Profile."))
 		invoice_doc.submit()
 
 		return {

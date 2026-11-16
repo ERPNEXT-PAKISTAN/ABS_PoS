@@ -1,3 +1,4 @@
+import { newCartId } from "../utils/cartIdentity";
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CartItem, GiftCoupon } from '../../types'
@@ -7,6 +8,8 @@ import { clearDraftInvoiceCache } from '../utils/draftInvoiceCache'
 import { updateItemPricesForCustomer, getItemPriceForCustomer, applyPricingRulesToCart } from '../services/dynamicPricing'
 
 interface CartState {
+  cartId: string
+  profileName: string | null
   cartItems: CartItem[]
   appliedCoupons: GiftCoupon[]
   selectedCustomer: Customer | null
@@ -30,6 +33,8 @@ interface CartState {
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
+      cartId: newCartId(),
+      profileName: null,
       cartItems: [],
       appliedCoupons: [],
       selectedCustomer: null,
@@ -217,6 +222,7 @@ export const useCartStore = create<CartState>()(
         // Clear draft invoice cache when clearing cart
         clearDraftInvoiceCache();
         set(() => ({
+          cartId: newCartId(),
           cartItems: [],
           appliedCoupons: [],
           selectedCustomer: null
@@ -369,7 +375,8 @@ export const useCartStore = create<CartState>()(
       }))
     }),
     {
-      name: 'beveren-cart-storage'
+      name: 'abs-cart:uninitialized',
+      skipHydration: true
     }
   )
 )

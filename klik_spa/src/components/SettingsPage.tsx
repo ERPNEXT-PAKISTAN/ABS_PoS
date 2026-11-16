@@ -1,3 +1,4 @@
+import ABSSetup from "./ABSSetup"
 import React, { useState } from "react"
 import { useAuth } from "../hooks/useAuth"
 import { useTheme } from "../hooks/useTheme"
@@ -49,6 +50,7 @@ export default function SettingsPage() {
   }
 
   const settingsSections = [
+    { id: "setup", title: "ABS PoS Setup", icon: Settings, description: "Branding, counter readiness and optional ZATCA" },
     {
       id: "profile",
       title: "Profile Information",
@@ -244,6 +246,7 @@ export default function SettingsPage() {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "setup": return <ABSSetup />
       case "profile":
         return renderProfileSection()
       case "appearance":

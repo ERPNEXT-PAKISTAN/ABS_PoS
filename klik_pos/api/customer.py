@@ -7,7 +7,7 @@ from frappe import _
 from klik_pos.klik_pos.utils import get_current_pos_profile
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 	"""
 	Fetch customers with structured primary contact & address details.
@@ -254,8 +254,9 @@ def get_user_company_and_currency():
 	return default_company, company_currency
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_customer_addresses(customer: str):
+	frappe.get_doc("Customer", customer).check_permission("read")
 	"""Get all addresses for a specific customer"""
 	try:
 		# Get all addresses linked to this customer
@@ -315,7 +316,7 @@ def get_currency_exchange_rate(from_currency: str, to_currency: str, transaction
 		return {"success": False, "error": str(e)}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_customer_info(customer_name: str):
 	"""Fetch comprehensive customer document by customer name or ID."""
 	try:
@@ -323,7 +324,6 @@ def get_customer_info(customer_name: str):
 		import urllib.parse
 
 		customer_name = urllib.parse.unquote(customer_name)
-		print("CUSTOMER WETU", customer_name)
 		# First try to find by customer_name
 		customers = frappe.get_all("Customer", filters={"customer_name": customer_name}, fields=["name"])
 
@@ -339,6 +339,7 @@ def get_customer_info(customer_name: str):
 			return {"success": False, "error": f"Customer not found: {customer_name}"}
 
 		customer = frappe.get_doc("Customer", customers[0]["name"])
+		customer.check_permission("read")
 
 		# Get primary contact details
 		contact_data = None
@@ -535,7 +536,7 @@ def get_or_create_customer(name, email, phone, country, name_arabic="", data=Non
 		raise e
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_customer_groups():
 	"""Fetch customer groups based on POS profile configuration."""
 	try:
@@ -575,7 +576,7 @@ def get_customer_groups():
 		return {"success": False, "error": str(e)}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_territories():
 	"""Fetch all territories for dropdown selection."""
 	try:
@@ -611,7 +612,7 @@ def create_or_update_contact(customer, customer_name, email, phone):
 			}
 		)
 
-	doc.save(ignore_permissions=True)
+	doc.save()
 	return doc
 
 
@@ -667,6 +668,7 @@ def update_customer(customer_id, customer_data):
 
 	try:
 		customer = frappe.get_doc("Customer", customer_id)
+		customer.check_permission("write")
 
 		# Extract email and phone for contact update
 		email = customer_data.get("email")
@@ -746,6 +748,7 @@ def update_customer(customer_id, customer_data):
 
 @frappe.whitelist()
 def get_customer_statistics(customer_id):
+	frappe.get_doc("Customer", customer_id).check_permission("read")
 	"""Get customer statistics including total orders and total spent"""
 	try:
 		# Get total invoices (orders) for the customer
@@ -810,7 +813,7 @@ def get_customer_statistics(customer_id):
 		return {"success": False, "error": str(e)}
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_global_totals():
 	"""Return global totals for customers and invoices for dashboard cards."""
 	try:

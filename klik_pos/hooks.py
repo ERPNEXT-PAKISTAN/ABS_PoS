@@ -1,5 +1,5 @@
 app_name = "klik_pos"
-app_title = "KLiK PoS"
+app_title = "ABS PoS"
 app_publisher = "Beveren Sooftware Inc"
 app_description = "KLiK PoS: A Modern Point of Sale for your Business"
 app_email = "info@beverensoftware.com"
@@ -15,7 +15,7 @@ app_license = "mit"
 # 	{
 # 		"name": "klik_pos",
 # 		"logo": "/assets/klik_pos/logo.png",
-# 		"title": "KLiK PoS",
+# 		"title": "ABS PoS",
 # 		"route": "/klik_pos",
 # 		"has_permission": "klik_pos.api.permission.has_app_permission"
 # 	}
@@ -69,8 +69,8 @@ fixtures = [
 add_to_apps_screen = [
 	{
 		"name": "klik_pos",
-		"logo": "/assets/klik_pos/klik_spa/bev_logo.jpeg",
-		"title": "KLiK PoS",
+		"logo": "/assets/klik_pos/klik_spa/abs-logo.svg",
+		"title": "ABS PoS",
 		"route": "/klik_pos",
 	}
 ]

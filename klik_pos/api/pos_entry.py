@@ -48,7 +48,9 @@ def create_opening_entry():
 		else:
 			pos_profile = get_current_pos_profile().name if get_current_pos_profile() else None
 
-		company = frappe.defaults.get_user_default("Company")
+		from klik_pos.api.access import require_profile
+		profile = require_profile(pos_profile)
+		company = profile.company
 
 		if not company:
 			frappe.throw(_("No default company found for user {0}").format(user))

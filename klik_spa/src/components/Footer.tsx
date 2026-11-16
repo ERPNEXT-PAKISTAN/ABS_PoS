@@ -1,8 +1,10 @@
 "use client"
 
+import { useBranding } from "../hooks/useBranding"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
 export default function Footer() {
+  const branding = useBranding()
   // Hide footer on mobile/tablet screens (same breakpoint as mobile layout)
   const isMobile = useMediaQuery("(max-width: 1024px)")
 
@@ -16,7 +18,8 @@ export default function Footer() {
       <div className="w-full py-2 flex justify-between items-center px-4">
 
         <div className="text-sm text-beveren-600 dark:text-beveren-400 font-bold">
-          KLiK PoS
+          {branding.business_name}
+          {branding.support_email && <a className="ms-3 text-xs font-normal underline" href={`mailto:${branding.support_email}`}>Support</a>}
         </div>
 
         <div className="text-xs text-gray-600 dark:text-gray-400">

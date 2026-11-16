@@ -1,9 +1,11 @@
+import { useBranding } from "../hooks/useBranding"
 import type React from "react"
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
 
 export default function LoginPage() {
+  const branding = useBranding()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [otp, setOtp] = useState("")
@@ -126,9 +128,9 @@ export default function LoginPage() {
           {/* Logo Section */}
           <div className="text-center mb-6">
             <div className="flex justify-center mb-4">
-              <img src="/assets/klik_pos/klik_spa/bev_logo.jpeg" alt="KLiK PoS" className="w-16 h-16 rounded-full shadow-lg" />
+              <img src={branding.logo || "/assets/klik_pos/klik_spa/abs-logo.svg"} alt={branding.business_name} className="w-16 h-16 rounded-full shadow-lg" />
             </div>
-            <h1 className="text-3xl font-bold text-beveren-800">KLiK PoS</h1>
+            <h1 className="text-3xl font-bold text-beveren-800">{branding.business_name}</h1>
           </div>
 
           <form onSubmit={isOtpStep ? handleVerifyOtp : handleLogin} className="space-y-4">
