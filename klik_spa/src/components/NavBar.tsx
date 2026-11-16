@@ -31,11 +31,11 @@ export default function NavBar() {
   const handleLogout = async () => {
     try {
       await logout()
-      window.location.href = "/klik_pos/login"
+      window.location.href = "/abs_pos/login"
     } catch (error) {
       console.error('Logout error:', error)
       // Still redirect even if logout fails
-      window.location.href = "/klik_pos/login"
+      window.location.href = "/abs_pos/login"
     }
   }
 

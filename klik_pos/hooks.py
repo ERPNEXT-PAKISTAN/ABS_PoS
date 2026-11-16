@@ -16,7 +16,7 @@ app_license = "mit"
 # 		"name": "klik_pos",
 # 		"logo": "/assets/klik_pos/logo.png",
 # 		"title": "ABS PoS",
-# 		"route": "/klik_pos",
+# 		"route": "/abs_pos/pos",
 # 		"has_permission": "klik_pos.api.permission.has_app_permission"
 # 	}
 # ]
@@ -71,7 +71,7 @@ add_to_apps_screen = [
 		"name": "klik_pos",
 		"logo": "/assets/klik_pos/klik_spa/abs-logo.svg",
 		"title": "ABS PoS",
-		"route": "/klik_pos",
+		"route": "/abs_pos/pos",
 	}
 ]
 
@@ -323,6 +323,17 @@ doctype_js.update({"Company": "public/js/company.js"})
 
 
 website_route_rules = [
+	{"from_route": "/abs_pos/<path:app_path>", "to_route": "klik_spa"},
+	{"from_route": "/abs_pos", "to_route": "klik_spa"},
 	{"from_route": "/klik_pos/<path:app_path>", "to_route": "klik_spa"},
 	{"from_route": "/klik_pos", "to_route": "klik_spa"},
 ]
+
+
+# Preserve bookmarks while presenting ABS as the canonical customer-facing route.
+website_redirects = [
+    {"source": "/klik_pos", "target": "/abs_pos/pos", "redirect_http_status": 302, "forward_query_parameters": True},
+    {"source": r"/klik_pos/(.*)", "target": r"/abs_pos/\1", "redirect_http_status": 302, "forward_query_parameters": True},
+]
+after_install = "klik_pos.setup.branding.sync_site_branding"
+after_migrate = "klik_pos.setup.branding.sync_site_branding"

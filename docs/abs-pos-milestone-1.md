@@ -4,8 +4,8 @@
 
 The internal Frappe package remains `klik_pos`, preserving the existing installation and license notices. ABS display branding is configurable. The original project remains the Git upstream.
 
-- Local POS: `http://127.0.0.1/klik_pos`
-- Setup and readiness: `http://127.0.0.1/klik_pos/setup`
+- Local POS: `http://127.0.0.1/abs_pos/pos`
+- Setup and readiness: `http://127.0.0.1/abs_pos/setup`
 - Native branding document: `http://127.0.0.1/desk/abs-pos-settings`
 - Company, warehouse, currency, payment methods, cashiers, discount/rate/write-off flags and print format remain native ERPNext Company/POS Profile configuration. Setup links to those forms; it does not silently change an operational counter.
 - Receipt footer applies to the new ABS Thermal Receipt format. Existing customer print formats are preserved; select ABS Thermal Receipt in the POS Profile to use it. Custom formats need their own equivalent field rendering.
@@ -59,3 +59,7 @@ ABS_TEST_SITE=your-local-test-site ../env/bin/python -m klik_pos.tests.check_con
 ### Local deployment note
 
 The full-site migration reached an unrelated Analytics Studio after_migrate hook and failed because its existing desktop icon references missing Account Director and Marketing roles. No roles or permissions were changed to bypass this. ABS was deployed with an app-scoped schema/fixture/customization sync and cache/service reload. The unrelated full-site migration blocker still needs separate repair.
+
+## ABS URLs and launcher
+
+The React router uses `/abs_pos`. Old `/klik_pos` URLs redirect to the matching ABS route, preserving query parameters. Assets, APIs and the installed Python package intentionally remain under `klik_pos`. The desktop branding hook updates only this app's icon and retains its role restrictions, visibility and position. It runs after installation/migration and when branding is saved. The PWA manifest now starts at `/abs_pos/pos`. Existing installed browser shortcuts may need a refresh or reinstall to pick up manifest branding.

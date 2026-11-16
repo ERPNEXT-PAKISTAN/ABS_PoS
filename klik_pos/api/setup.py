@@ -57,6 +57,8 @@ def save_branding(settings):
 	if not doc.business_name:
 		frappe.throw(_('POS Name is required.'))
 	doc.save()
+	from klik_pos.setup.branding import sync_site_branding
+	sync_site_branding()
 	return get_branding()
 
 

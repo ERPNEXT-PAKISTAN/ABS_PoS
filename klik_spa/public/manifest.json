@@ -2,7 +2,7 @@
   "name": "ABS PoS",
   "short_name": "ABS PoS",
   "description": "ABS Point of Sale",
-  "start_url": "/klik_pos/",
+  "start_url": "/abs_pos/pos",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2E7D32",
@@ -21,5 +21,5 @@
   ],
   "lang": "en",
   "dir": "auto",
-  "scope": "/klik_pos/"
+  "scope": "/abs_pos/"
 }
