@@ -63,3 +63,13 @@ The full-site migration reached an unrelated Analytics Studio after_migrate hook
 ## ABS URLs and launcher
 
 The React router uses `/abs_pos`. Old `/klik_pos` URLs redirect to the matching ABS route, preserving query parameters. Assets, APIs and the installed Python package intentionally remain under `klik_pos`. The desktop branding hook updates only this app's icon and retains its role restrictions, visibility and position. It runs after installation/migration and when branding is saved. The PWA manifest now starts at `/abs_pos/pos`. Existing installed browser shortcuts may need a refresh or reinstall to pick up manifest branding.
+
+## Item invoice history
+
+Use History on an item card, list row, or cart item. The popup offers Sales, Purchases and Selected customer. Select a customer in the POS cart to use the customer tab. New labels support Arabic/RTL and English.
+
+History is read-only, limited to the latest eight submitted Sales Invoices or Purchase Invoices containing that item, within the active POS company's native document permissions. Read AND report permission on the relevant invoice DocType are required; purchase costs are not granted to cashiers automatically. The customer tab additionally checks Customer read permission. Child-field permissions redact restricted quantities/UOM/rates/amounts.
+
+Draft/cancelled documents are excluded; submitted returns remain visible and marked. Order: posting date, posting time, creation and document name, descending. Distinct invoice selection prevents repeated lines consuming the eight-document limit. An invoice with different UOMs/rates for this item shows separate lines instead of an averaged price. Net rate and amount exclude tax and retain each invoice's currency. Links open the native ERPNext invoice in another tab. This does not include Purchase Orders, Purchase Receipts, Delivery Notes or unconsolidated POS Invoices.
+
+Validation: 10 focused history tests cover company/customer/status filters, the eight-document limit, distinct selection, permission denial, restricted field redaction, repeated item lines and returns. Read-only local checks passed with populated purchase, sales and selected-customer results. Production build passed with no new TypeScript diagnostics against the existing baseline. Browser host remains unavailable, so modal appearance, click behavior and responsive layout require browser acceptance.

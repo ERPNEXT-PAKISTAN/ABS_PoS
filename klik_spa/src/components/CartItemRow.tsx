@@ -1,3 +1,4 @@
+import ItemHistoryButton from "./ItemHistoryButton"
 "use client"
 
 import { useI18n } from "../hooks/useI18n"
@@ -31,6 +32,7 @@ export default function CartItemRow({ item, onUpdateQty }: CartItemRowProps) {
         <div className={imageSrc ? "" : "flex-1"}>
           <div className="font-medium text-sm">{isRTL ? (nameAr as string) : (nameEn as string)}</div>
           <div className="text-xs text-gray-600">{isRTL ? (nameEn as string) : (nameAr as string)}</div>
+          <ItemHistoryButton itemCode={item.id} itemName={nameEn as string} compact />
         </div>
       </div>
 

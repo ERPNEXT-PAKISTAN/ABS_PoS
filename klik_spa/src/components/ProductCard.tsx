@@ -1,6 +1,7 @@
 "use client"
 
 // import { useI18n } from "../hooks/useI18n"
+import ItemHistoryButton from "./ItemHistoryButton"
 import type { MenuItem } from "../../types"
 
 interface ProductCardProps {
@@ -65,6 +66,7 @@ return (
             </span>
           </div>
         )}
+        <div className="absolute bottom-2 right-2 z-20"><ItemHistoryButton itemCode={item.id} itemName={item.name} compact={isMobile} /></div>
       </div>
       <div className={`${isMobile ? "p-2 h-12" : "p-3 h-16"} flex flex-col justify-between`}>
         <div>

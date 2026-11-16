@@ -1,6 +1,7 @@
 "use client"
 
 // import { useI18n } from "../hooks/useI18n"
+import ItemHistoryButton from "./ItemHistoryButton"
 import type { MenuItem } from "../../types"
 
 interface ProductLineViewProps {
@@ -108,7 +109,8 @@ export default function ProductLineView({ items, onAddToCart, isMobile = false, 
                 )}
 
                 {/* Action */}
-                <div className={`${isMobile ? "col-span-1" : "col-span-2"} flex items-center justify-center`}>
+                <div className={`${isMobile ? "col-span-1" : "col-span-2"} flex items-center justify-center gap-1 flex-wrap`}>
+                  <ItemHistoryButton itemCode={item.id} itemName={item.name} compact={isMobile} />
                   {isDisabled ? (
                     <span className={`text-gray-400 dark:text-gray-500 ${isMobile ? "text-xs" : "text-xs"}`}>
                       {isOutOfStock ? "0" : "S"}

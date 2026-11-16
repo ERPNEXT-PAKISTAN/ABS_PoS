@@ -1819,6 +1819,7 @@
 
 "use client";
 
+import ItemHistoryButton from "./ItemHistoryButton";
 import { useState, useEffect, useCallback } from "react";
 import {
   Minus,
@@ -3241,6 +3242,7 @@ export default function OrderSummary({
                       >
                         {item.name}
                       </h4>
+                      <div className="mt-1"><ItemHistoryButton itemCode={item.id} itemName={item.name} /></div>
                       <p
                         className={`text-gray-500 dark:text-gray-400 capitalize font-medium ${
                           isMobile ? "text-sm" : "text-xs"
