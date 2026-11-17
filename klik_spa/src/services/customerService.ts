@@ -6,6 +6,12 @@ interface CustomerAddress {
   state?: string;
   zipCode?: string;
   country: string;
+  addressTitleArabic?: string;
+  streetArabic?: string;
+  buildingArabic?: string;
+  cityArabic?: string;
+  stateArabic?: string;
+  countryArabic?: string;
 }
 
 interface CustomerData {

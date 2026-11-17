@@ -65,6 +65,7 @@ export default function AddCustomerModal({
       state: "",
       zipCode: "",
       country: "Saudi Arabia",
+		addressTitleArabic: "", streetArabic: "", buildingArabic: "", cityArabic: "", stateArabic: "", countryArabic: "",
     },
     status: "active" as Customer["status"],
     vatNumber: "",
@@ -1344,6 +1345,20 @@ export default function AddCustomerModal({
                         <option key={country.value} value={country.label} />
                       ))}
                     </datalist>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4">
+                  <h4 className="font-medium text-gray-800 dark:text-white mb-3">Arabic Address | العنوان بالعربية</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      ['addressTitleArabic', 'Address Title (Arabic) | عنوان العنوان بالعربية'], ['streetArabic', 'Street (Arabic) | الشارع بالعربية'],
+                      ['buildingArabic', 'Building / Secondary (Arabic) | المبنى والرقم الإضافي بالعربية'], ['cityArabic', 'City (Arabic) | المدينة بالعربية'],
+                      ['stateArabic', 'Province (Arabic) | المنطقة بالعربية'], ['countryArabic', 'Country (Arabic) | الدولة بالعربية'],
+                    ].map(([field, label]) => <div key={field}>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+                      <input type="text" dir="rtl" value={(formData.address as Record<string, string>)[field] || ''} onChange={(e) => setFormData((prev) => ({ ...prev, address: { ...prev.address, [field]: e.target.value } }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beveren-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    </div>)}
                   </div>
                 </div>
 

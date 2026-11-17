@@ -646,6 +646,12 @@ def create_or_update_address(customer_id, customer_name, address_data, country):
 		"country": country,
 		"is_primary_address": 1 if address_data.get("isPrimary") else 0,
 		"is_shipping_address": 0,
+		"address_title_arabic": address_data.get("addressTitleArabic", ""),
+		"address_line1_arabic": address_data.get("streetArabic", ""),
+		"address_line2_arabic": address_data.get("buildingArabic", ""),
+		"city_arabic": address_data.get("cityArabic", ""),
+		"state_arabic": address_data.get("stateArabic", ""),
+		"country_arabic": address_data.get("countryArabic", ""),
 	}
 
 	existing = frappe.get_all("Address", filters={"address_title": address_title}, fields=["name"])
