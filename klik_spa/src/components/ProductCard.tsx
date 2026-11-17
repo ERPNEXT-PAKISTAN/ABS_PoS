@@ -72,6 +72,7 @@ return (
         <div>
           <h3 className={`font-semibold text-gray-900 dark:text-white truncate ${isMobile ? "text-xs" : "text-sm"}`}>
             {item.name}
+			{item.name_arabic && <span className="block text-xs text-gray-500 dark:text-gray-400" dir="rtl">{item.name_arabic}</span>}
           </h3>
         </div>
         <div className="flex items-center justify-between">

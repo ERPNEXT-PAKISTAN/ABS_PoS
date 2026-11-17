@@ -2990,6 +2990,7 @@ export default function OrderSummary({
                             <div className="font-medium text-gray-900 dark:text-white text-sm truncate">
                               {customer.name}
                             </div>
+							{customer.customer_name_in_arabic && <div className="text-xs text-gray-500 dark:text-gray-400 truncate" dir="rtl">{customer.customer_name_in_arabic}</div>}
                             <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                {customer.phone} • {customer.email}
                             </div>
@@ -3086,6 +3087,7 @@ export default function OrderSummary({
                           <div className="font-medium text-gray-900 dark:text-white text-sm truncate">
                             {customer.name}
                           </div>
+						{customer.customer_name_in_arabic && <div className="text-xs text-gray-500 dark:text-gray-400 truncate" dir="rtl">{customer.customer_name_in_arabic}</div>}
                           <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {customer.email} • {customer.phone}
                           </div>

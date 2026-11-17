@@ -37,6 +37,7 @@ export interface MenuItem {
   currency_symbol?: string
   barcode?: string
   custom_type?: string | null
+  name_arabic?: string
 }
 
 export interface Category {
@@ -213,6 +214,7 @@ export interface Customer {
   email: string
   email_id:string
   customer_name:string
+  customer_name_in_arabic?: string
   mobile_no: string
   territory: string
   customer_group:string

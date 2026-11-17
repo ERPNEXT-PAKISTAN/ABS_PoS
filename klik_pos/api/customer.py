@@ -83,7 +83,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 
 			customer_names = frappe.db.sql(
 				f"""
-                SELECT DISTINCT c.name, c.customer_name, c.customer_type, c.customer_group, c.territory, c.default_currency
+                SELECT DISTINCT c.name, c.customer_name, c.customer_name_in_arabic, c.customer_type, c.customer_group, c.territory, c.default_currency
                 FROM `tabCustomer` c
                 LEFT JOIN `tabDynamic Link` dl ON dl.link_doctype='Customer' AND dl.link_name=c.name AND dl.parenttype='Contact'
                 LEFT JOIN `tabContact` ct ON ct.name = dl.parent
@@ -168,6 +168,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 				fields=[
 					"name",
 					"customer_name",
+					"customer_name_in_arabic",
 					"customer_type",
 					"customer_group",
 					"territory",
@@ -214,6 +215,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 				{
 					"name": doc.name,
 					"customer_name": doc.customer_name,
+					"customer_name_in_arabic": doc.get("customer_name_in_arabic") or "",
 					"customer_type": doc.customer_type,
 					"customer_group": doc.customer_group,
 					"territory": doc.territory,

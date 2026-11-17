@@ -73,6 +73,7 @@ export default function ProductLineView({ items, onAddToCart, isMobile = false, 
                     }`}>
                       {item.name}
                     </h3>
+					{item.name_arabic && <p className="text-xs text-gray-500 dark:text-gray-400" dir="rtl">{item.name_arabic}</p>}
                     <p className={`text-gray-500 dark:text-gray-400 ${isMobile ? "text-xs leading-tight" : "text-sm"} ${
                       isMobile ? "break-words" : "truncate"
                     }`}>

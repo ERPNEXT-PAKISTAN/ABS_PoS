@@ -62,6 +62,7 @@ export function useCustomers(searchQuery?: string) {
           id: customer.name,
           type: customer.customer_type === "Company" ? "company" : "individual",
           name: customer.customer_name || `Customer ${customer.name.slice(0, 5)}`,
+		  customer_name_in_arabic: customer.customer_name_in_arabic || '',
           email: customer.contact?.email_id || "",
           phone: customer.contact?.mobile_no || customer.contact?.phone || "",
           address: {
