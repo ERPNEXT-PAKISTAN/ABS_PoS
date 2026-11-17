@@ -54,6 +54,8 @@ export function ProductProvider({ children }: ProductProviderProps) {
 
   // Ref to track if we're currently searching (to prevent race conditions)
   const searchAbortController = useRef<AbortController | null>(null);
+  // A slower previous catalog request must never overwrite a newer type selection.
+  const catalogRequestRef = useRef(0);
 
   // Fetch products from API with pagination
   const fetchProductsFromAPI = async (
@@ -220,6 +222,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
 
   // Initial fetch of products with pagination
   const fetchProducts = async (forceRefresh = false, type: string = customType) => {
+	const requestId = ++catalogRequestRef.current;
     setIsLoading(true);
     setError(null);
     setSearchQuery(''); // Clear search on initial fetch
@@ -227,6 +230,8 @@ export function ProductProvider({ children }: ProductProviderProps) {
 
     try {
       const result = await fetchProductsFromAPI(PAGE_SIZE, 0, '', '', type);
+
+		if (requestId !== catalogRequestRef.current) return;
 
       setProducts(result.items);
       setTotalCount(result.total_count);
@@ -237,6 +242,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
       console.log(`Products loaded: ${result.items.length} of ${result.total_count} items`);
       //eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
+		if (requestId !== catalogRequestRef.current) return;
       console.error("Error fetching products:", error);
       // Fail-open: don't block UI with "Invalid response format"
       if (error.message && error.message.includes("Invalid response format")) {
@@ -245,7 +251,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
         setError(error.message || "Unknown error occurred");
       }
     } finally {
-      setIsLoading(false);
+		if (requestId === catalogRequestRef.current) setIsLoading(false);
     }
   };
 
