@@ -5,7 +5,9 @@ type ItemType = { id: string; name: string; count: number }
 
 export default function ItemTypeFilter() {
   const [types, setTypes] = useState<ItemType[]>([])
-  const [selected, setSelected] = useState('')
+  // Product reloads temporarily unmount this header. Keep the active filter so
+  // it never visually falls back to "All types" while S/N is still applied.
+  const [selected, setSelected] = useState(() => window.sessionStorage.getItem('abs-pos-custom-type') || '')
 
   useEffect(() => {
     fetch('/api/method/klik_pos.api.item.get_item_types_for_pos')
@@ -16,6 +18,8 @@ export default function ItemTypeFilter() {
 
   const apply = (value: string) => {
     setSelected(value)
+    if (value) window.sessionStorage.setItem('abs-pos-custom-type', value)
+    else window.sessionStorage.removeItem('abs-pos-custom-type')
     window.dispatchEvent(new CustomEvent('abs-custom-type-filter', { detail: { custom_type: value } }))
   }
 

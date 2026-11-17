@@ -17,7 +17,7 @@ import { toast } from "react-toastify"
 
 export default function RetailPOSLayout() {
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedCustomType, setSelectedCustomType] = useState("")
+  const [selectedCustomType, setSelectedCustomType] = useState(() => window.sessionStorage.getItem('abs-pos-custom-type') || "")
   const [localSearchQuery, setLocalSearchQuery] = useState("")
   const [appliedCoupons, setAppliedCoupons] = useState<GiftCoupon[]>([])
   const [showScanner, setShowScanner] = useState(false)

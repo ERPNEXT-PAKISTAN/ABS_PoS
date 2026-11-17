@@ -50,7 +50,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [customType, setCustomType] = useState<string>('');
+  const [customType, setCustomType] = useState<string>(() => window.sessionStorage.getItem('abs-pos-custom-type') || '');
 
   // Ref to track if we're currently searching (to prevent race conditions)
   const searchAbortController = useRef<AbortController | null>(null);
