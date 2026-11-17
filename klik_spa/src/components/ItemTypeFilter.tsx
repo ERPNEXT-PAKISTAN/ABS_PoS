@@ -14,7 +14,6 @@ export default function ItemTypeFilter() {
       .catch(() => setTypes([]))
   }, [])
 
-  if (!types.length) return null
   const apply = (value: string) => {
     setSelected(value)
     window.dispatchEvent(new CustomEvent('abs-custom-type-filter', { detail: { custom_type: value } }))
