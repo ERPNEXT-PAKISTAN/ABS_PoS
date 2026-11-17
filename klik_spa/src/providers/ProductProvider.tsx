@@ -399,6 +399,15 @@ export function ProductProvider({ children }: ProductProviderProps) {
   }, []);
 
   // Clear search and reset to initial products
+  useEffect(() => {
+    const update = (event: Event) => {
+      const detail = (event as CustomEvent<{ item_code: string; uom: string; price: number; currency: string }>).detail;
+      setProducts(items => items.map(item => item.id === detail.item_code && item.uom === detail.uom ? { ...item, price: detail.price, currency: detail.currency } : item));
+    };
+    window.addEventListener('abs-item-price-changed', update);
+    return () => window.removeEventListener('abs-item-price-changed', update);
+  }, []);
+
   const clearSearch = useCallback(() => {
     setSearchQuery('');
     fetchProducts();

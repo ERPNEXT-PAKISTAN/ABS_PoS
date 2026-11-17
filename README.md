@@ -2,7 +2,7 @@
 
 ABS PoS is maintained in the ERPNEXT-PAKISTAN/ABS_PoS fork, based on KLiK PoS. This ABS branch targets Frappe/ERPNext v16. The internal Frappe package remains `klik_pos`.
 
-The first ABS milestone adds configurable branding/setup, optional ZATCA detection, cashier access checks, transactional checkout request protection and scoped cart recovery. Read [deployment and validation notes](docs/abs-pos-milestone-1.md) before customer rollout. Beveren ZATCA remains an optional, separately tested integration.
+The first ABS milestone adds configurable branding/setup, optional ZATCA detection, cashier access checks, transactional checkout request protection and scoped cart recovery. Item History also includes a [purchase-cost and markup calculator](docs/item-pricing.md). Read [deployment and validation notes](docs/abs-pos-milestone-1.md) before customer rollout. Beveren ZATCA remains an optional, separately tested integration.
 
 Original project documentation and attribution follow below. Existing license notices are retained.
 

@@ -73,3 +73,7 @@ History is read-only, limited to the latest eight submitted Sales Invoices or Pu
 Draft/cancelled documents are excluded; submitted returns remain visible and marked. Order: posting date, posting time, creation and document name, descending. Distinct invoice selection prevents repeated lines consuming the eight-document limit. An invoice with different UOMs/rates for this item shows separate lines instead of an averaged price. Net rate and amount exclude tax and retain each invoice's currency. Links open the native ERPNext invoice in another tab. This does not include Purchase Orders, Purchase Receipts, Delivery Notes or unconsolidated POS Invoices.
 
 Validation: 10 focused history tests cover company/customer/status filters, the eight-document limit, distinct selection, permission denial, restricted field redaction, repeated item lines and returns. Read-only local checks passed with populated purchase, sales and selected-customer results. Production build passed with no new TypeScript diagnostics against the existing baseline. Browser host remains unavailable, so modal appearance, click behavior and responsive layout require browser acceptance.
+
+## Purchase-cost pricing
+
+The item popup now also includes Pricing / profit: latest purchase cost, a quantity-weighted average of the latest eight purchase invoices and an editable markup calculator with guarded Item Price saving. See [pricing definitions, permissions and tax limits](item-pricing.md).

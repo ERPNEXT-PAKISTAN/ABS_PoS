@@ -1,0 +1,99 @@
+{
+ "doctype": "DocType",
+ "name": "ABS Item Pricing Policy",
+ "module": "KLiK PoS",
+ "autoname": "hash",
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "field_order": [
+  "company",
+  "item",
+  "price_list",
+  "uom",
+  "markup_percentage",
+  "cost_basis",
+  "company_currency",
+  "manual_cost",
+  "saved_price",
+  "item_price"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "label": "Company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item",
+   "label": "Item",
+   "fieldtype": "Link",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "price_list",
+   "label": "Selling Price List",
+   "fieldtype": "Link",
+   "options": "Price List",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uom",
+   "label": "Selling UOM",
+   "fieldtype": "Link",
+   "options": "UOM",
+   "reqd": 1
+  },
+  {
+   "fieldname": "markup_percentage",
+   "label": "Profit / Markup %",
+   "fieldtype": "Percent",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cost_basis",
+   "label": "Purchase Cost Basis",
+   "fieldtype": "Select",
+   "options": "Latest purchase\nWeighted average\nManual",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company_currency",
+   "label": "Company Currency",
+   "fieldtype": "Link",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "manual_cost",
+   "label": "Manual Cost per Stock UOM",
+   "fieldtype": "Currency",
+   "options": "company_currency"
+  },
+  {
+   "fieldname": "saved_price",
+   "label": "Last Saved Selling Price",
+   "fieldtype": "Currency",
+   "options": "company_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_price",
+   "label": "Item Price",
+   "fieldtype": "Link",
+   "options": "Item Price",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1
+  }
+ ]
+}

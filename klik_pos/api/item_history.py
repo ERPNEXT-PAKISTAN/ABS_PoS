@@ -29,6 +29,7 @@ def get_item_history(item_code, view='sales', customer=None):
 	item.check_permission('read')
 	permissions = {'sales': can_view('Sales Invoice'), 'purchases': can_view('Purchase Invoice')}
 	permissions['customer_sales'] = permissions['sales']
+	permissions['pricing'] = permissions['purchases']
 	result = {'item_code': item.name, 'item_name': item.item_name, 'company': profile.company, 'permissions': permissions, 'limit': LIMIT, 'transactions': []}
 	if view == 'access':
 		return result

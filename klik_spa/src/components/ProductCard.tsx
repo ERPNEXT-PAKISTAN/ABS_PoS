@@ -66,7 +66,7 @@ return (
             </span>
           </div>
         )}
-        <div className="absolute bottom-2 right-2 z-20"><ItemHistoryButton itemCode={item.id} itemName={item.name} compact={isMobile} /></div>
+        <div className="absolute bottom-2 right-2 z-20"><ItemHistoryButton itemCode={item.id} itemUom={item.uom} itemName={item.name} compact={isMobile} /></div>
       </div>
       <div className={`${isMobile ? "p-2 h-12" : "p-3 h-16"} flex flex-col justify-between`}>
         <div>

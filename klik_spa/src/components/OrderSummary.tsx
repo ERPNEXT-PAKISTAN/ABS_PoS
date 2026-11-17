@@ -3242,7 +3242,7 @@ export default function OrderSummary({
                       >
                         {item.name}
                       </h4>
-                      <div className="mt-1"><ItemHistoryButton itemCode={item.id} itemName={item.name} /></div>
+                      <div className="mt-1"><ItemHistoryButton itemCode={item.id} itemUom={item.uom} itemName={item.name} /></div>
                       <p
                         className={`text-gray-500 dark:text-gray-400 capitalize font-medium ${
                           isMobile ? "text-sm" : "text-xs"
