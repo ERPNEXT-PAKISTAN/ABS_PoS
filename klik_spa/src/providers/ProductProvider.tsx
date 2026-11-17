@@ -50,6 +50,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [currentOffset, setCurrentOffset] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [customType, setCustomType] = useState<string>('');
 
   // Ref to track if we're currently searching (to prevent race conditions)
   const searchAbortController = useRef<AbortController | null>(null);
@@ -59,7 +60,8 @@ export function ProductProvider({ children }: ProductProviderProps) {
     limit: number = PAGE_SIZE,
     offset: number = 0,
     search: string = '',
-    category: string = ''
+    category: string = '',
+    type: string = customType,
   ): Promise<{
     items: MenuItem[];
     total_count: number;
@@ -77,6 +79,7 @@ export function ProductProvider({ children }: ProductProviderProps) {
       if (category && category !== 'all') {
         params.append('category', category);
       }
+      if (type) params.append('custom_type', type);
       const response = await fetch(
         `/api/method/klik_pos.api.item.get_items_with_balance_and_price?${params.toString()}`
       );
@@ -216,14 +219,14 @@ export function ProductProvider({ children }: ProductProviderProps) {
   };
 
   // Initial fetch of products with pagination
-  const fetchProducts = async (forceRefresh = false) => {
+  const fetchProducts = async (forceRefresh = false, type: string = customType) => {
     setIsLoading(true);
     setError(null);
     setSearchQuery(''); // Clear search on initial fetch
     backgroundLoadStartedRef.current = false; // Reset background load flag
 
     try {
-      const result = await fetchProductsFromAPI(PAGE_SIZE, 0);
+      const result = await fetchProductsFromAPI(PAGE_SIZE, 0, '', '', type);
 
       setProducts(result.items);
       setTotalCount(result.total_count);
@@ -245,6 +248,16 @@ export function ProductProvider({ children }: ProductProviderProps) {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const update = (event: Event) => {
+      const type = (event as CustomEvent<{ custom_type?: string }>).detail?.custom_type || '';
+      setCustomType(type);
+      fetchProducts(true, type);
+    };
+    window.addEventListener('abs-custom-type-filter', update);
+    return () => window.removeEventListener('abs-custom-type-filter', update);
+  }, []);
 
   // Ref to track if background loading has been started
   const backgroundLoadStartedRef = useRef(false);

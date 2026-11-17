@@ -9,6 +9,7 @@ import { usePOSDetails } from "../hooks/usePOSProfile"
 import { ShoppingCart, Search, Settings, LogOut, Moon, Sun, Scan, Grid3X3, List, Store, RefreshCw } from "lucide-react"
 import { clearCacheAndReload } from "../utils/clearCache"
 import CategoryTabs from "./CategoryTabs"
+import ItemTypeFilter from "./ItemTypeFilter"
 import ProductGrid from "./ProductGrid"
 import BottomNavigation from "./BottomNavigation"
 import type { MenuItem, CartItem } from "../../types"
@@ -222,6 +223,7 @@ export default function MobilePOSLayout({
             )}
           </div>
         </div>
+        <ItemTypeFilter />
 
         {/* Search Bar */}
         <div className="px-4 pb-3">

@@ -6,6 +6,7 @@ import { usePOSDetails } from "../hooks/usePOSProfile"
 import { Settings, LogOut, Moon, Sun, Grid3X3, List, Store, RefreshCw } from "lucide-react"
 import { clearCacheAndReload } from "../utils/clearCache"
 import CategoryTabs from "./CategoryTabs"
+import ItemTypeFilter from "./ItemTypeFilter"
 import ProductGrid from "./ProductGrid"
 import SearchBar from "./SearchBar"
 import type { MenuItem } from "../../types"
@@ -236,6 +237,7 @@ export default function MenuGrid({
             )}
           </div>
         </div>
+        <ItemTypeFilter />
 
         {/* Categories */}
         <div className="px-6">

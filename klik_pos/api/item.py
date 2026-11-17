@@ -605,6 +605,7 @@ def get_items_with_balance_and_price(
 	offset: int = 0,
 	search: str | None = None,
 	category: str | None = None,
+	custom_type: str | None = None,
 ):
 	"""
 	Get items with balance and price - optimized with pagination and server-side search.
@@ -633,7 +634,7 @@ def get_items_with_balance_and_price(
 
 	try:
 		# Build the base query
-		select_fields = "i.name, i.item_name, i.description, i.item_group, i.image, i.stock_uom"
+		select_fields = "i.name, i.item_name, i.description, i.item_group, i.custom_type, i.image, i.stock_uom"
 
 		if hide_unavailable:
 			base_query = [
@@ -693,6 +694,13 @@ def get_items_with_balance_and_price(
 			params_list.append(category)
 			count_params.append(category)
 
+		# Type is an app-managed Item link field. Apply it in SQL, before pagination.
+		if custom_type and custom_type.strip():
+			base_query.append("AND i.custom_type = %s")
+			count_query.append("AND i.custom_type = %s")
+			params_list.append(custom_type.strip())
+			count_params.append(custom_type.strip())
+
 		# Search filter - search by name, item_code, description, or barcode
 		if search and search.strip():
 			search_term = f"%{search.strip()}%"
@@ -743,6 +751,10 @@ def get_items_with_balance_and_price(
 			if category and category != "all":
 				unfiltered_count_query.append("AND i.item_group = %s")
 				unfiltered_count_params.append(category)
+
+			if custom_type and custom_type.strip():
+				unfiltered_count_query.append("AND i.custom_type = %s")
+				unfiltered_count_params.append(custom_type.strip())
 
 			# Apply search filter if specified
 			if search and search.strip():
@@ -833,6 +845,7 @@ def get_items_with_balance_and_price(
 					"name": item.get("item_name") or item_code,
 					"description": item.get("description", ""),
 					"category": item.get("item_group", "General"),
+					"custom_type": item.get("custom_type"),
 					"price": price_info["price"],
 					"currency": price_info["currency"],
 					"currency_symbol": price_info["currency_symbol"],
@@ -857,6 +870,40 @@ def get_items_with_balance_and_price(
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "Get Combined Item Data Error")
 		frappe.throw(_("Something went wrong while fetching item data."))
+
+
+@frappe.whitelist()
+def get_item_types_for_pos():
+	"""Active types and matching catalog counts for the current permitted POS context."""
+	pos_doc, _warehouse, _price_list, _hide_unavailable = _get_pos_context()
+	filters = {"disabled": 0}
+	types = frappe.get_all("ABS Item Type", filters=filters, fields=["name", "type_name"], order_by="type_name asc")
+	allowed_groups = [row.item_group for row in getattr(pos_doc, "item_groups", []) if row.item_group]
+	result = []
+	for item_type in types:
+		item_filters = {"disabled": 0, "is_stock_item": 1, "custom_type": item_type.name}
+		if allowed_groups:
+			item_filters["item_group"] = ["in", allowed_groups]
+		result.append({"id": item_type.name, "name": item_type.type_name, "count": frappe.db.count("Item", item_filters)})
+	return result
+
+
+@frappe.whitelist()
+def get_native_pos_items_by_custom_type(start, page_length, price_list, item_group, pos_profile, custom_type, search_term=""):
+	"""Type-aware adapter for the standard ERPNext Point of Sale item selector."""
+	from frappe.utils import cint
+	from erpnext.selling.page.point_of_sale.point_of_sale import get_items
+	# ERPNext's core endpoint owns price/stock/permission handling. Fetch its permitted
+	# set, then filter only by the app-owned Item link field before returning its shape.
+	# 10k is a deliberate safety ceiling for a POS catalog.
+	all_items = get_items(0, 10000, price_list, item_group, pos_profile, search_term).get("items", [])
+	if not all_items:
+		return {"items": []}
+	codes = [row.item_code for row in all_items]
+	allowed = set(frappe.get_all("Item", filters={"name": ["in", codes], "custom_type": custom_type}, pluck="name"))
+	filtered = [row for row in all_items if row.item_code in allowed]
+	begin, size = max(cint(start), 0), min(max(cint(page_length), 1), 1000)
+	return {"items": filtered[begin : begin + size]}
 
 
 @frappe.whitelist()
