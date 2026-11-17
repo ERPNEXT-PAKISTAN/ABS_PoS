@@ -801,6 +801,8 @@ def get_items_with_balance_and_price(
 			}
 
 		item_codes = [item["name"] for item in items]
+		group_arabic = {row.name: row.item_group_name_arabic for row in frappe.get_all("Item Group", filters={"name": ["in", list({item.item_group for item in items})]}, fields=["name", "item_group_name_arabic"])}
+		uom_arabic = {row.name: row.uom_name_arabic for row in frappe.get_all("UOM", filters={"name": ["in", list({item.stock_uom for item in items})]}, fields=["name", "uom_name_arabic"])}
 
 		# Fetch barcodes in batch
 		barcode_map = {}
@@ -846,6 +848,7 @@ def get_items_with_balance_and_price(
 					"name_arabic": item.get("item_name_arabic") or "",
 					"description": item.get("description", ""),
 					"category": item.get("item_group", "General"),
+					"category_arabic": group_arabic.get(item.get("item_group"), ""),
 					"custom_type": item.get("custom_type"),
 					"price": price_info["price"],
 					"currency": price_info["currency"],
@@ -855,6 +858,7 @@ def get_items_with_balance_and_price(
 					"sold": 0,
 					"preparationTime": 10,
 					"uom": default_uom,
+					"uom_arabic": uom_arabic.get(default_uom, ""),
 					"barcode": primary_barcode,
 				}
 			)

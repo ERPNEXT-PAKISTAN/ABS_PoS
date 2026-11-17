@@ -489,6 +489,8 @@ def get_or_create_customer(name, email, phone, country, name_arabic="", data=Non
 		territory = data.get("territory", country) if data else country
 
 		existing = frappe.get_all("Customer", filters={"customer_name": name}, fields=["name"])
+		ksa_fields = (data or {}).get("ksa_fields", {})
+		allowed_ksa_fields = {"custom_vat_number", "custom_vat_number_ar", "custom_cr_number", "custom_cr_number_ar", "custom_building_no", "custom_building_no_ar", "custom_street_en", "custom_street_ar", "custom_district_en", "custom_district_ar", "custom_secondary_no", "custom_postal_code", "custom_city_ar", "custom_country_ar"}
 		if existing:
 			doc = frappe.get_doc("Customer", existing[0]["name"])
 			doc.email_id = email
@@ -505,6 +507,9 @@ def get_or_create_customer(name, email, phone, country, name_arabic="", data=Non
 				doc.custom_registration_scheme = data.get("registrationScheme")
 				doc.custom_registration_number = data.get("registrationNumber")
 
+			for field, value in ksa_fields.items():
+				if field in allowed_ksa_fields and doc.meta.has_field(field):
+					setattr(doc, field, value or "")
 			doc.save()
 		else:
 			# Create new
@@ -532,6 +537,9 @@ def get_or_create_customer(name, email, phone, country, name_arabic="", data=Non
 					),
 				}
 			)
+			for field, value in ksa_fields.items():
+				if field in allowed_ksa_fields and doc.meta.has_field(field):
+					setattr(doc, field, value or "")
 			doc.insert()
 		return doc
 	except Exception as e:

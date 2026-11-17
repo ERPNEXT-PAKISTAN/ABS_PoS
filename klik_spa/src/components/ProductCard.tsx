@@ -78,6 +78,7 @@ return (
         <div className="flex items-center justify-between">
           <p className={`text-gray-500 dark:text-gray-400 capitalize ${isMobile ? "text-xs" : "text-xs"}`}>
             {item.category}
+			{item.category_arabic && <span className="block" dir="rtl">{item.category_arabic}</span>}
           </p>
           <span className={`font-bold text-beveren-600 dark:text-beveren-400 ${isMobile ? "text-xs" : "text-sm"}`}>
             {formattedPrice}

@@ -79,6 +79,7 @@ export default function ProductLineView({ items, onAddToCart, isMobile = false, 
                     }`}>
                       {item.category}
                     </p>
+					{item.category_arabic && <p className="text-xs text-gray-500 dark:text-gray-400" dir="rtl">{item.category_arabic}</p>}
                   </div>
                 </div>
 

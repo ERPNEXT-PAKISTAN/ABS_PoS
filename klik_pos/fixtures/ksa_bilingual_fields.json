@@ -16,5 +16,7 @@
  {"doctype":"Custom Field","dt":"Customer","name":"Customer-custom_postal_code","fieldname":"custom_postal_code","label":"Postal Code | الرمز البريدي","fieldtype":"Data","insert_after":"custom_secondary_no","module":"KLiK PoS"},
  {"doctype":"Custom Field","dt":"Customer","name":"Customer-custom_city_ar","fieldname":"custom_city_ar","label":"City (Arabic) | المدينة بالعربية","fieldtype":"Data","insert_after":"custom_postal_code","module":"KLiK PoS"},
  {"doctype":"Custom Field","dt":"Customer","name":"Customer-custom_country_ar","fieldname":"custom_country_ar","label":"Country (Arabic) | الدولة بالعربية","fieldtype":"Data","insert_after":"custom_city_ar","module":"KLiK PoS"},
- {"doctype":"Custom Field","dt":"Item","name":"Item-item_name_arabic","fieldname":"item_name_arabic","label":"Item Name (Arabic) | اسم الصنف بالعربية","fieldtype":"Data","insert_after":"item_name","in_list_view":1,"module":"KLiK PoS"}
+ {"doctype":"Custom Field","dt":"Item","name":"Item-item_name_arabic","fieldname":"item_name_arabic","label":"Item Name (Arabic) | اسم الصنف بالعربية","fieldtype":"Data","insert_after":"item_name","in_list_view":1,"module":"KLiK PoS"},
+ {"doctype":"Custom Field","dt":"UOM","name":"UOM-uom_name_arabic","fieldname":"uom_name_arabic","label":"UOM Name (Arabic) | اسم وحدة القياس بالعربية","fieldtype":"Data","insert_after":"uom_name","in_list_view":1,"module":"KLiK PoS"},
+ {"doctype":"Custom Field","dt":"Item Group","name":"Item Group-item_group_name_arabic","fieldname":"item_group_name_arabic","label":"Item Group Name (Arabic) | اسم مجموعة الأصناف بالعربية","fieldtype":"Data","insert_after":"item_group_name","in_list_view":1,"module":"KLiK PoS"}
 ]

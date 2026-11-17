@@ -14,6 +14,7 @@ interface CustomerData {
   email: string;
   phone: string;
   name_arabic?: string;
+  ksa_fields?: Record<string, string>;
   address: CustomerAddress;
   preferredPaymentMethod?: string;
   contactName?: string;

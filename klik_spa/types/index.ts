@@ -38,6 +38,8 @@ export interface MenuItem {
   barcode?: string
   custom_type?: string | null
   name_arabic?: string
+  category_arabic?: string
+  uom_arabic?: string
 }
 
 export interface Category {

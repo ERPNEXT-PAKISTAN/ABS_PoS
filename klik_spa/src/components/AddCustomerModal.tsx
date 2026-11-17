@@ -53,6 +53,7 @@ export default function AddCustomerModal({
     customer_type: "individual" as Customer["type"],
     name: "",
     name_arabic: "",
+	ksa_fields: { custom_vat_number: "", custom_vat_number_ar: "", custom_cr_number: "", custom_cr_number_ar: "", custom_building_no: "", custom_building_no_ar: "", custom_street_en: "", custom_street_ar: "", custom_district_en: "", custom_district_ar: "", custom_secondary_no: "", custom_postal_code: "", custom_city_ar: "", custom_country_ar: "" },
     contactName: "",
     email: "",
     phone: "",
@@ -130,6 +131,7 @@ export default function AddCustomerModal({
         customer_type: customer.type || "individual",
         name: customer.name,
         name_arabic: customer.customer_name_in_arabic || "",
+		ksa_fields: {},
         contactName: customer.contactPerson || "",
         email: customer.email,
         phone: customer.phone,
@@ -338,6 +340,7 @@ export default function AddCustomerModal({
       const customerData = {
         name: formData.name,
         name_arabic: formData.name_arabic,
+		ksa_fields: formData.ksa_fields,
         customer_type: formData.customer_type === "individual" ? "Individual" : "Company",
         email: formData.email,
         phone: formData.phone,
@@ -751,6 +754,25 @@ export default function AddCustomerModal({
                     </p>
                   )}
                 </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mt-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center"><Building size={20} className="mr-2" />KSA Customer Details | بيانات العميل السعودية</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Enter approved Arabic values for invoices and ZATCA customer records.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  ['custom_vat_number', 'VAT Number (English) | الرقم الضريبي بالإنجليزية'], ['custom_vat_number_ar', 'VAT Number (Arabic) | الرقم الضريبي بالعربية'],
+                  ['custom_cr_number', 'CR Number (English) | رقم السجل التجاري بالإنجليزية'], ['custom_cr_number_ar', 'CR Number (Arabic) | رقم السجل التجاري بالعربية'],
+                  ['custom_building_no', 'Building No. (English) | رقم المبنى بالإنجليزية'], ['custom_building_no_ar', 'Building No. (Arabic) | رقم المبنى بالعربية'],
+                  ['custom_street_en', 'Street (English) | الشارع بالإنجليزية'], ['custom_street_ar', 'Street (Arabic) | الشارع بالعربية'],
+                  ['custom_district_en', 'District (English) | الحي بالإنجليزية'], ['custom_district_ar', 'District (Arabic) | الحي بالعربية'],
+                  ['custom_secondary_no', 'Secondary No. | الرقم الإضافي'], ['custom_postal_code', 'Postal Code | الرمز البريدي'],
+                  ['custom_city_ar', 'City (Arabic) | المدينة بالعربية'], ['custom_country_ar', 'Country (Arabic) | الدولة بالعربية'],
+                ].map(([field, label]) => <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+                  <input type="text" dir={field.endsWith('_ar') ? 'rtl' : 'ltr'} value={formData.ksa_fields[field] || ''} onChange={(e) => setFormData((prev) => ({ ...prev, ksa_fields: { ...prev.ksa_fields, [field]: e.target.value } }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beveren-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                </div>)}
               </div>
             </div>
 
