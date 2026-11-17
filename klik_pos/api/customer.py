@@ -374,6 +374,7 @@ def get_customer_info(customer_name: str):
 		customer_data = {
 			"name": customer.name,
 			"customer_name": customer.customer_name,
+			"customer_name_in_arabic": customer.get("customer_name_in_arabic") or "",
 			"customer_group": customer.customer_group,
 			"territory": customer.territory,
 			"customer_type": customer.customer_type,

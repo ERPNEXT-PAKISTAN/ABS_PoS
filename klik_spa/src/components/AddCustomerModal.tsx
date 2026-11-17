@@ -52,6 +52,7 @@ export default function AddCustomerModal({
   const [formData, setFormData] = useState({
     customer_type: "individual" as Customer["type"],
     name: "",
+    name_arabic: "",
     contactName: "",
     email: "",
     phone: "",
@@ -128,6 +129,7 @@ export default function AddCustomerModal({
       const newFormData = {
         customer_type: customer.type || "individual",
         name: customer.name,
+        name_arabic: customer.customer_name_in_arabic || "",
         contactName: customer.contactPerson || "",
         email: customer.email,
         phone: customer.phone,
@@ -335,6 +337,7 @@ export default function AddCustomerModal({
     try {
       const customerData = {
         name: formData.name,
+        name_arabic: formData.name_arabic,
         customer_type: formData.customer_type === "individual" ? "Individual" : "Company",
         email: formData.email,
         phone: formData.phone,
@@ -362,6 +365,7 @@ export default function AddCustomerModal({
           ...newCustomer,
           id: newCustomer.customer_name,
           name: formData.name,
+          customer_name_in_arabic: formData.name_arabic,
           type: formData.customer_type,
           email: formData.email,
           phone: formData.phone,
@@ -642,6 +646,21 @@ export default function AddCustomerModal({
                   {errors.name && (
                     <p className="text-red-500 text-xs mt-1">{errors.name}</p>
                   )}
+                </div>
+
+                <div>
+                  <label htmlFor="name_arabic" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Customer Name (Arabic) | اسم العميل بالعربية
+                  </label>
+                  <input
+                    type="text"
+                    id="name_arabic"
+                    dir="rtl"
+                    value={formData.name_arabic}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, name_arabic: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-beveren-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="اكتب اسم العميل بالعربية"
+                  />
                 </div>
 
                 {formData.customer_type === "company" && posDetails?.is_zatca_enabled && (

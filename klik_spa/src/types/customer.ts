@@ -3,6 +3,7 @@ export interface Customer {
   type: 'individual' | 'company' | 'walk-in'
   name: string
   customer_name: string
+  customer_name_in_arabic?: string
   email: string
   phone: string
   address: {

@@ -2512,6 +2512,7 @@ export default function OrderSummary({
           const customerToSelect: Customer = {
             id: erpCustomer.name,
             name: erpCustomer.customer_name || erpCustomer.name,
+			customer_name_in_arabic: erpCustomer.customer_name_in_arabic || '',
             email: erpCustomer.email_id || '',
             phone: erpCustomer.mobile_no || '',
             type: erpCustomer.customer_type === "Company" ? "company" : "individual",
