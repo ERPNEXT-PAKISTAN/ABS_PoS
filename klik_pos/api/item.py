@@ -878,7 +878,8 @@ def get_item_types_for_pos():
 	pos_doc, _warehouse, _price_list, _hide_unavailable = _get_pos_context()
 	filters = {"disabled": 0}
 	types = frappe.get_all("ABS Item Type", filters=filters, fields=["name", "type_name"], order_by="type_name asc")
-	allowed_groups = [row.item_group for row in getattr(pos_doc, "item_groups", []) if row.item_group]
+	# Child tables are None on some POS Profile documents rather than an empty list.
+	allowed_groups = [row.item_group for row in (getattr(pos_doc, "item_groups", None) or []) if row.item_group]
 	result = []
 	for item_type in types:
 		item_filters = {"disabled": 0, "is_stock_item": 1, "custom_type": item_type.name}

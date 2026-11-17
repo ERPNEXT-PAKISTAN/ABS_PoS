@@ -1,6 +1,12 @@
 /* Shared desk filter for Item rows. The selected type is only a picking aid; it never changes document data. */
 (function () {
 	function setup(frm) {
+		// Keep the visible control immediately above the Items child table.
+		const filter_wrapper = frm.fields_dict.custom_type_filter && frm.fields_dict.custom_type_filter.$wrapper;
+		const items_wrapper = frm.fields_dict.items && frm.fields_dict.items.$wrapper;
+		if (filter_wrapper && items_wrapper && !filter_wrapper.data("abs-item-type-moved")) {
+			filter_wrapper.insertBefore(items_wrapper).data("abs-item-type-moved", true);
+		}
 		frm.set_query("item_code", "items", function () {
 			return frm.doc.custom_type_filter ? { filters: { custom_type: frm.doc.custom_type_filter } } : {};
 		});
