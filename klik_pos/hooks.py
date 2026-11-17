@@ -340,5 +340,5 @@ website_redirects = [
     {"source": "/klik_pos", "target": "/abs_pos/pos", "redirect_http_status": 302, "forward_query_parameters": True},
     {"source": r"/klik_pos/(.*)", "target": r"/abs_pos/\1", "redirect_http_status": 302, "forward_query_parameters": True},
 ]
-after_install = "klik_pos.setup.branding.sync_site_branding"
-after_migrate = "klik_pos.setup.branding.sync_site_branding"
+after_install = ["klik_pos.setup.branding.sync_site_branding", "klik_pos.setup.item_type.sync_item_types"]
+after_migrate = ["klik_pos.setup.branding.sync_site_branding", "klik_pos.setup.item_type.sync_item_types"]
