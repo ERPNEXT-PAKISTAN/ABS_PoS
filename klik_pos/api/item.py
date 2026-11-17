@@ -874,18 +874,20 @@ def get_items_with_balance_and_price(
 
 @frappe.whitelist()
 def get_item_types_for_pos():
-	"""Active types and matching catalog counts for the current permitted POS context."""
+	"""The existing Item.custom_type Select values and matching permitted catalog counts."""
 	pos_doc, _warehouse, _price_list, _hide_unavailable = _get_pos_context()
-	filters = {"disabled": 0}
-	types = frappe.get_all("ABS Item Type", filters=filters, fields=["name", "type_name"], order_by="type_name asc")
+	field = frappe.get_meta("Item").get_field("custom_type")
+	types = [value.strip() for value in (field.options or "").splitlines() if value.strip()] if field else []
+	if not types:
+		types = frappe.db.sql("select distinct custom_type from `tabItem` where ifnull(custom_type, '') != '' order by custom_type", pluck=True)
 	# Child tables are None on some POS Profile documents rather than an empty list.
 	allowed_groups = [row.item_group for row in (getattr(pos_doc, "item_groups", None) or []) if row.item_group]
 	result = []
 	for item_type in types:
-		item_filters = {"disabled": 0, "is_stock_item": 1, "custom_type": item_type.name}
+		item_filters = {"disabled": 0, "is_stock_item": 1, "custom_type": item_type}
 		if allowed_groups:
 			item_filters["item_group"] = ["in", allowed_groups]
-		result.append({"id": item_type.name, "name": item_type.type_name, "count": frappe.db.count("Item", item_filters)})
+		result.append({"id": item_type, "name": item_type, "count": frappe.db.count("Item", item_filters)})
 	return result
 
 

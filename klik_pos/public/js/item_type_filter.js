@@ -15,7 +15,7 @@
 		frm.add_custom_button(__("Item Type"), function () {
 			const dialog = new frappe.ui.Dialog({
 				title: __("Filter Items by Type"),
-				fields: [{ fieldname: "custom_type", label: __("Custom Type"), fieldtype: "Link", options: "ABS Item Type", get_query: () => ({ filters: { disabled: 0 } }) }],
+				fields: [{ fieldname: "custom_type", label: __("Custom Type"), fieldtype: "Select", options: frm.fields_dict.custom_type_filter.df.options }],
 				primary_action_label: __("Apply"),
 				primary_action(values) { frm.set_value("custom_type_filter", values.custom_type || ""); dialog.hide(); }
 			});

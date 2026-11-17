@@ -15,8 +15,11 @@
 		};
 		const $holder = $('<div class="abs-item-type-pos-filter" style="min-width:180px;margin-left:8px"></div>');
 		selector.$component.find('.filter-section').append($holder);
-		const control = frappe.ui.form.make_control({ parent: $holder, df: { fieldname: 'custom_type', label: __('Item Type'), fieldtype: 'Link', options: 'ABS Item Type', get_query: () => ({ filters: { disabled: 0 } }), change() { selector.custom_type = control.get_value() || ''; selector.search_index = {}; selector.filter_items(); } }, render_input: true });
-		control.refresh();
+		frappe.call({ method: 'klik_pos.api.item.get_item_types_for_pos' }).then((r) => {
+			const values = (r.message || []).map(row => row.id).join('\n');
+			const control = frappe.ui.form.make_control({ parent: $holder, df: { fieldname: 'custom_type', label: __('Item Type'), fieldtype: 'Select', options: `\n${values}`, change() { selector.custom_type = control.get_value() || ''; selector.search_index = {}; selector.filter_items(); } }, render_input: true });
+			control.refresh();
+		});
 	}
 	$(document).on('page-change', function () { initialized = false; setTimeout(init, 300); });
 	setInterval(init, 1000);
