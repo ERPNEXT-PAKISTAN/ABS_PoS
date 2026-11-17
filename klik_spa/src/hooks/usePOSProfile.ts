@@ -118,6 +118,8 @@ export type POSDetails = {
   write_off_cost_center?: string;
   custom_delivery_required?: number;
   allow_discount_change?: boolean;
+  allow_rate_change?: boolean;
+  custom_allow_credit_sales?: boolean;
   // extend with any other server-provided fields as needed
   [key: string]: unknown;
 }

@@ -1270,7 +1270,7 @@ def _prepare_item_data(item, item_data_map, pos_profile):
 	# 	final_rate = flt(original_price)
 	# 	ignore_pricing_rule = 0	
 
-	rate = item.get("price") or item.get("original_price")
+	rate = item.get("price") if item.get("price") is not None else item.get("original_price")
 	discount_percentage = flt(item.get("discountPercentage", 0))
 	discount_amount = flt(item.get("discountAmount", 0))
 	has_manual_discount = bool(discount_percentage or discount_amount)
@@ -1332,7 +1332,7 @@ def _get_coupon_discount(data):
 	"""Total value of gift coupons applied in the POS."""
 	if isinstance(data, str):
 		data = json.loads(data)
-	return sum(flt(coupon.get("value")) for coupon in (data.get("appliedCoupons") or []))
+	return sum(flt(coupon.get("value")) for coupon in (data.get("appliedCoupons") or [])) + flt(data.get("invoiceDiscount"))
 
 
 def _apply_invoice_level_discounts(doc, items, coupon_discount=0.0):
@@ -1362,6 +1362,8 @@ def _apply_invoice_level_discounts(doc, items, coupon_discount=0.0):
 	total_discount = flt(coupon_discount) + rule_line_discount
 	if total_discount <= 0:
 		return
+	if total_discount > sum(flt(row.rate) * flt(row.qty) for row in doc.items) + 0.01:
+		frappe.throw(_("Discount cannot exceed the invoice amount."))
 
 	# Match the POS: inclusive tax discounts the grand total, exclusive tax the taxable amount
 	is_inclusive = any(tax.included_in_print_rate for tax in doc.get("taxes"))

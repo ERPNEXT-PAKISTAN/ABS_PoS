@@ -145,6 +145,8 @@ export default function PaymentDialog({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [lastModifiedMethodId, setLastModifiedMethodId] = useState<string | null>(null);
   const [roundOffAmount, setRoundOffAmount] = useState(0);
+  const [invoiceDiscountInput, setInvoiceDiscountInput] = useState("");
+  const [invoiceDiscountMode, setInvoiceDiscountMode] = useState<"amount" | "percent">("amount");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isVerifyingPrices, setIsVerifyingPrices] = useState(false);
   const [isHoldingOrder, setIsHoldingOrder] = useState(false);
@@ -523,7 +525,12 @@ export default function PaymentDialog({
       (sum, coupon) => sum + coupon.value,
       0
     );
-    const taxableAmount = Math.max(0, subtotal - couponDiscount);
+    const available = Math.max(0, subtotal - couponDiscount);
+    const entered = Math.max(0, Number(invoiceDiscountInput) || 0);
+    const invoiceDiscount = posDetails?.allow_discount_change
+      ? Math.min(available, invoiceDiscountMode === "percent" ? available * Math.min(entered, 100) / 100 : entered)
+      : 0;
+    const taxableAmount = Math.max(0, available - invoiceDiscount);
 
     const selectedTax = salesTaxCharges.find(
       (tax) => tax.id === selectedSalesTaxCharges
@@ -549,6 +556,7 @@ export default function PaymentDialog({
     return {
       subtotal,
       couponDiscount,
+      invoiceDiscount,
       taxableAmount,
       taxAmount,
       grandTotal: grandTotal + roundOffAmount,
@@ -558,6 +566,9 @@ export default function PaymentDialog({
   }, [
     cartItems,
     appliedCoupons,
+    invoiceDiscountInput,
+    invoiceDiscountMode,
+    posDetails?.allow_discount_change,
     selectedSalesTaxCharges,
     salesTaxCharges,
     roundOffAmount,
@@ -583,36 +594,6 @@ export default function PaymentDialog({
       }
     }
   }, [isOpen, modes, calculations.grandTotal, isB2B, isB2C]);
-
-  useEffect(() => {
-
-    if (modes.length > 0 && Object.keys(paymentAmounts).length > 0) {
-      const defaultMode = modes.find((mode) => mode.default === 1);
-      if (defaultMode) {
-        // Calculate total of all payment methods
-        const totalPayments = Object.values(paymentAmounts).reduce((sum, amount) => sum + (amount || 0), 0);
-        const excess = totalPayments - calculations.grandTotal;
-
-        // Find the payment method with the highest amount
-        const paymentEntries = Object.entries(paymentAmounts);
-        const highestAmountMethod = paymentEntries.reduce((max, current) =>
-          (current[1] || 0) > (max[1] || 0) ? current : max
-        );
-        const [highestMethodId, highestAmount] = highestAmountMethod;
-
-
-
-        if (highestAmount > 0 && excess > 0) {
-          // Subtract excess from the method with highest amount
-          const newAmount = Math.max(0, highestAmount - excess);
-          setPaymentAmounts((prev) => ({
-            ...prev,
-            [highestMethodId]: newAmount,
-          }));
-        }
-      }
-    }
-  }, [calculations.grandTotal, modes, isB2C, isB2B, isCombined, paymentAmounts]);
 
   // Auto-print when invoice is submitted and auto-print is enabled
   useEffect(() => {
@@ -945,7 +926,7 @@ export default function PaymentDialog({
     }
     // For B2B, we don't need payment validation
     // For B2C, validate payment completion
-    if (isB2C) {
+    if (isB2C || !posDetails?.custom_allow_credit_sales) {
       const activePaymentMethods = Object.entries(paymentAmounts)
         .filter(([, amount]) => amount > 0)
         .map(([method, amount]) => ({ method, amount }));
@@ -962,15 +943,20 @@ export default function PaymentDialog({
     }
 
     // For B2B, no payment validation required - can be partial or zero payment
+    const excess = Math.max(0, subtractCurrency(totalPaidAmount, calculations.grandTotal));
+    const cashModes = new Set(modes.filter(mode => mode.type === "Cash").map(mode => mode.mode_of_payment));
+    const cashReceived = Object.entries(paymentAmounts).reduce((sum, [method, amount]) => sum + (cashModes.has(method) ? amount : 0), 0);
+    if (excess > cashReceived + 0.001) {
+      toast.error("Change cannot exceed the cash received. Reduce the non-cash payment amount.");
+      return;
+    }
     setIsProcessingPayment(true);
 
     // Calculate net amount to send to backend (amount paid minus change for B2C)
-    const netAmountToSend = isB2B ? totalPaidAmount : calculations.grandTotal;
+    const netAmountToSend = roundCurrency(totalPaidAmount - excess);
 
     // For B2C, adjust payment method amounts to reflect net payment (after change)
-    const adjustedPaymentMethods = isB2B
-      ? Object.entries(paymentAmounts).filter(([, amount]) => amount > 0)
-      : (() => {
+    const adjustedPaymentMethods = (() => {
           const validPayments = Object.entries(paymentAmounts).filter(([, amount]) => amount > 0);
 
           if (validPayments.length === 0) return [];
@@ -981,21 +967,12 @@ export default function PaymentDialog({
           // If total exceeds grand total, adjust the last payment method
           if (totalPaymentAmount > calculations.grandTotal) {
             const excess = totalPaymentAmount - calculations.grandTotal;
-            const lastPaymentIndex = validPayments.length - 1;
-            const lastPayment = validPayments[lastPaymentIndex];
-            if (!lastPayment) return;
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const [lastMethod, lastAmount] = lastPayment;
-
-            // Reduce the last payment method by the excess amount
-            const adjustedLastAmount = parseFloat(Math.max(0, lastAmount - excess).toFixed(2));
-
-            return validPayments.map(([method, amount], index) => {
-              if (index === lastPaymentIndex) {
-                return [method, adjustedLastAmount];
-              }
-              return [method, amount];
-            });
+            let remainingChange = excess;
+            return validPayments.map(([method, amount]) => {
+              const returned = cashModes.has(method) ? Math.min(amount, remainingChange) : 0;
+              remainingChange = roundCurrency(remainingChange - returned);
+              return [method, roundCurrency(amount - returned)] as [string, number];
+            }).filter(([, amount]) => amount > 0);
           }
 
           return validPayments;
@@ -1021,6 +998,7 @@ export default function PaymentDialog({
       taxAmount: calculations.taxAmount,
       taxType: calculations.isInclusive ? "inclusive" : "exclusive",
       couponDiscount: calculations.couponDiscount,
+      invoiceDiscount: calculations.invoiceDiscount,
       roundOffAmount,
       grandTotal: calculations.grandTotal,
       amountPaid: netAmountToSend, // Send net amount (grand total for B2C, total paid for B2B)
@@ -1116,6 +1094,7 @@ export default function PaymentDialog({
       taxAmount: calculations.taxAmount,
       taxType: calculations.isInclusive ? "inclusive" : "exclusive",
       couponDiscount: calculations.couponDiscount,
+      invoiceDiscount: calculations.invoiceDiscount,
       roundOffAmount,
       grandTotal: calculations.grandTotal,
       appliedCoupons,
@@ -1179,10 +1158,35 @@ export default function PaymentDialog({
   const isActionButtonDisabled = () => {
     if (invoiceSubmitted || isProcessingPayment || isVerifyingPrices) return true;
     // For B2C, check if payment is complete
-    if (isB2C) return outstandingAmount > 0;
+    if (isB2C || !posDetails?.custom_allow_credit_sales) return outstandingAmount > 0;
     // For B2B, no payment validation needed
     return false;
   };
+
+  const invoiceDiscountControl = !invoiceSubmitted && (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Discount</label>
+      <div className="flex gap-2">
+        <input type="number" min="0" step="0.01" value={invoiceDiscountInput}
+          onChange={(e) => setInvoiceDiscountInput(e.target.value)} disabled={isProcessingPayment || !posDetails?.allow_discount_change}
+          placeholder="0" className="min-w-0 flex-1 px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white" />
+        <select value={invoiceDiscountMode} onChange={(e) => setInvoiceDiscountMode(e.target.value as "amount" | "percent")}
+          disabled={isProcessingPayment || !posDetails?.allow_discount_change} className="px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white">
+          <option value="amount">Amount</option><option value="percent">%</option>
+        </select>
+      </div>
+      <div className="text-sm text-green-700">Discount: {formatCurrency(calculations.invoiceDiscount)}</div>
+      {!posDetails?.allow_discount_change && <div className="text-sm text-gray-500">Enable Allow User to Edit Discount in the POS Profile.</div>}
+    </div>
+  );
+
+  const cashSummary = !invoiceSubmitted && (
+    <div className="grid grid-cols-3 gap-2 rounded-lg bg-blue-50 dark:bg-gray-700 p-3 text-sm">
+      <div><div>Bill Total</div><strong>{formatCurrency(calculations.grandTotal)}</strong></div>
+      <div><div>Received</div><strong>{formatCurrency(totalPaidAmount)}</strong></div>
+      <div><div>{outstandingAmount > 0 ? "Remaining" : "Change"}</div><strong>{formatCurrency(outstandingAmount > 0 ? outstandingAmount : Math.max(0, subtractCurrency(totalPaidAmount, calculations.grandTotal)))}</strong></div>
+    </div>
+  );
 
   if (isMobile) {
     // Mobile view remains mostly the same, just update the button text and validation
@@ -1209,6 +1213,8 @@ export default function PaymentDialog({
           )}
 
           <div className="p-4 space-y-6">
+            {cashSummary}
+            {invoiceDiscountControl}
             {invoiceSubmitted ? (
               <div className="space-y-4">
                 {/* Action Buttons for Mobile */}
@@ -1488,7 +1494,7 @@ export default function PaymentDialog({
                     </div>
                   </div>
 
-                  {(isB2C || isB2B) && (
+                  {(isB2C || isB2B || isCombined) && (
                     <>
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">
@@ -1684,6 +1690,8 @@ export default function PaymentDialog({
         <div className="flex flex-1 min-h-0">
           {/* Left Section */}
           <div className="w-2/3 p-6 overflow-y-auto custom-scrollbar space-y-6">
+            {cashSummary}
+            {invoiceDiscountControl}
             {(invoiceSubmitted && sharingMode) ||
             (externalInvoiceData && sharingMode) ? (
               // Sharing Interface
@@ -2255,6 +2263,7 @@ export default function PaymentDialog({
                           </span>
                         </div>
                       )}
+                      {calculations.invoiceDiscount > 0 && <div className="flex justify-between text-green-600"><span>Invoice Discount</span><span>-{formatCurrency(calculations.invoiceDiscount)}</span></div>}
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">
                           Tax ({calculations.selectedTax?.rate}%{" "}
@@ -2293,7 +2302,7 @@ export default function PaymentDialog({
                         </div>
                       </div>
 
-                      {(isB2C || isB2B) && (
+                      {(isB2C || isB2B || isCombined) && (
                         <>
                           <div className="flex justify-between">
                             <span className="text-gray-600 dark:text-gray-400">

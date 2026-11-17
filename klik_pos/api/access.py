@@ -77,6 +77,11 @@ def validate_checkout(data, profile):
 			frappe.throw(_('Manual discounts are disabled in this POS Profile.'))
 	if not profile.allow_discount_change and data.get('appliedCoupons'):
 		frappe.throw(_('Manual coupons are disabled in this POS Profile.'))
+	invoice_discount = flt(data.get('invoiceDiscount'))
+	if not math.isfinite(invoice_discount) or invoice_discount < 0:
+		frappe.throw(_('Invoice discount must be finite and non-negative.'))
+	if invoice_discount and not profile.allow_discount_change:
+		frappe.throw(_('Invoice discounts are disabled in this POS Profile.'), frappe.PermissionError)
 	if not math.isfinite(flt(data.get('amountPaid'))) or flt(data.get('amountPaid')) < 0:
 		frappe.throw(_('Payment amount must be finite and non-negative.'))
 	if abs(flt(data.get('roundOffAmount'))) > flt(profile.write_off_limit):

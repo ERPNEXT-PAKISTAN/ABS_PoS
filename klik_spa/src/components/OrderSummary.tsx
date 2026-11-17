@@ -2241,7 +2241,7 @@ export default function OrderSummary({
   onRemoveCoupon,
   isMobile = false,
 }: OrderSummaryProps) {
-  const { selectedCustomer, setSelectedCustomer, updateUOM, updatePricesForCustomer } = useCartStore();
+  const { selectedCustomer, setSelectedCustomer, updateUOM, updatePricesForCustomer, applyServerPricing } = useCartStore();
 
   // Track if user has manually removed the default customer
   const [userRemovedDefaultCustomer, setUserRemovedDefaultCustomer] = useState(false);
@@ -3245,7 +3245,6 @@ export default function OrderSummary({
                       >
                         {item.name}
                       </h4>
-                      <div className="mt-1"><ItemHistoryButton itemCode={item.id} itemUom={item.uom} itemName={item.name} /></div>
                       <p
                         className={`text-gray-500 dark:text-gray-400 capitalize font-medium ${
                           isMobile ? "text-sm" : "text-xs"
@@ -3364,6 +3363,15 @@ export default function OrderSummary({
                       } bg-gray-25 dark:bg-gray-750`}
                     >
                       <div className="w-full">
+                        <div className="mb-4"><ItemHistoryButton itemCode={item.id} itemUom={item.uom} itemName={item.name} /></div>
+                        {posDetails?.allow_rate_change && (
+                          <div className="mb-4">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm mb-2">Rate</label>
+                            <input type="number" min="0" step="0.01" value={item.price}
+                              onChange={(e) => { const rate = Number(e.target.value); if (e.target.value !== '' && Number.isFinite(rate) && rate >= 0) applyServerPricing({ [item.id]: { price: rate } }); }}
+                              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:bg-gray-800 dark:text-white" />
+                          </div>
+                        )}
                         {/* Row 1: Quantity | UOM */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
