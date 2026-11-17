@@ -36,6 +36,7 @@ export interface MenuItem {
   uom?: string
   currency_symbol?: string
   barcode?: string
+  custom_type?: string | null
 }
 
 export interface Category {

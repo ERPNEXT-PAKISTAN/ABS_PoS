@@ -17,6 +17,7 @@ import { toast } from "react-toastify"
 
 export default function RetailPOSLayout() {
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [selectedCustomType, setSelectedCustomType] = useState("")
   const [localSearchQuery, setLocalSearchQuery] = useState("")
   const [appliedCoupons, setAppliedCoupons] = useState<GiftCoupon[]>([])
   const [showScanner, setShowScanner] = useState(false)
@@ -425,9 +426,22 @@ export default function RetailPOSLayout() {
     }
   }, [])
 
+  // Enforce the visible type filter locally as well as on the API request. This
+  // prevents an older "All items" response from ever becoming visible again.
+  useEffect(() => {
+    const update = (event: Event) => {
+      setSelectedCustomType((event as CustomEvent<{ custom_type?: string }>).detail?.custom_type || "")
+    }
+    window.addEventListener('abs-custom-type-filter', update)
+    return () => window.removeEventListener('abs-custom-type-filter', update)
+  }, [])
+
   // When server-side search is active, use menuItems directly (already filtered by server)
   // Only apply local filtering for category and scale barcode typing
   const filteredItems = menuItems.filter((item) => {
+	if (selectedCustomType && item.custom_type !== selectedCustomType) {
+	  return false
+	}
     // Availability filter - hide items with 0 quantity if hide_unavailable_items is enabled
     if (hideUnavailableItems && item.available <= 0) {
       return false
