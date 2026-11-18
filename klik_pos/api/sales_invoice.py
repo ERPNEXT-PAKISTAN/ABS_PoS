@@ -181,6 +181,7 @@ def _build_filters_and_fields(skip_opening_entry_filter=False, cashier_user_ids=
 		"total_taxes_and_charges",
 		"custom_pos_opening_entry",
 		"pos_profile",
+		"company",
 		"currency",
 	]
 
@@ -231,7 +232,7 @@ def _batch_fetch_payment_methods(invoice_names):
 		return {}
 
 	payment_query = """
-		SELECT parent, mode_of_payment, amount
+		SELECT parent, mode_of_payment, amount, base_amount
 		FROM `tabSales Invoice Payment`
 		WHERE parent IN ({})
 	""".format(",".join([f"'{name}'" for name in invoice_names]))
@@ -243,7 +244,7 @@ def _batch_fetch_payment_methods(invoice_names):
 		if payment.parent not in payment_methods_map:
 			payment_methods_map[payment.parent] = []
 		payment_methods_map[payment.parent].append(
-			{"mode_of_payment": payment.mode_of_payment, "amount": payment.amount}
+			{"mode_of_payment": payment.mode_of_payment, "amount": payment.amount, "base_amount": payment.base_amount}
 		)
 
 	return payment_methods_map
@@ -255,7 +256,7 @@ def _batch_fetch_items(invoice_names):
 		return {}
 
 	items_query = """
-		SELECT name, parent, item_code, uom, qty, rate, amount
+		SELECT name, parent, item_code, item_name, uom, qty, rate, amount, base_rate, base_amount, base_net_amount
 		FROM `tabSales Invoice Item`
 		WHERE parent IN ({})
 	""".format(",".join([f"'{name}'" for name in invoice_names]))
@@ -270,9 +271,13 @@ def _batch_fetch_items(invoice_names):
 			{
 				"name": item.name,
 				"item_code": item.item_code,
+				"item_name": item.item_name,
 				"uom": item.uom,
 				"qty": item.qty,
 				"rate": item.rate,
+				"base_rate": item.base_rate,
+				"base_amount": item.base_amount,
+				"base_net_amount": item.base_net_amount,
 				"amount": item.amount,
 				"quantity": item.qty,
 			}

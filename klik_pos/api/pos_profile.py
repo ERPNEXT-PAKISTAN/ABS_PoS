@@ -158,6 +158,8 @@ def get_pos_details():
 		"business_type": business_type,
 		"print_format": print_format,
 		"currency": pos.currency,
+		"company": pos.company,
+		"company_currency": frappe.get_cached_value("Company", pos.company, "default_currency"),
 		"currency_symbol": frappe.db.get_value("Currency", pos.currency, "symbol") or pos.currency,
 		"print_receipt_on_order_complete": pos.print_receipt_on_order_complete,
 		"custom_use_scanner_fully": pos.custom_use_scanner_fully,

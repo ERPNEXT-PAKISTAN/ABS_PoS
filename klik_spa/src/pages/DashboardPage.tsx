@@ -9,8 +9,6 @@ import {
   ShoppingCart,
   Users,
   CreditCard,
-  Gift,
-  Calendar,
   Clock,
   BarChart3,
   PieChart,
@@ -31,13 +29,13 @@ import { useUserInfo } from "../hooks/useUserInfo"
 export default function DashboardPage() {
   const navigate = useNavigate()
   const isMobile = useMediaQuery("(max-width: 1024px)")
-  const { posDetails } = usePOSDetails()
+  const { posDetails, loading: profileLoading, error: profileError } = usePOSDetails()
 
   // Only fetch submitted invoices for dashboard (exclude Draft and Cancelled)
-  const { invoices, isLoading: invoicesLoading } = useSalesInvoices("", false, undefined, true)
+  const { invoices, isLoading: invoicesLoading, isLoadingMore, totalLoaded, totalCount, error: invoiceError } = useSalesInvoices("", false, undefined, true)
   const { userInfo, isLoading: userInfoLoading } = useUserInfo()
   // Blank => current POS opening session
-  const [timeRange, setTimeRange] = useState("")
+  const [timeRange, setTimeRange] = useState("all")
   // Current session payment summary from backend (includes zero-amount methods)
   const { modes: sessionPaymentSummary } = useAllPaymentModes()
 
@@ -50,24 +48,6 @@ export default function DashboardPage() {
   const [paymentFilter, setPaymentFilter] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [salesByHourGraphType, setSalesByHourGraphType] = useState<"bar" | "line">("bar")
-
-  // Default stats for gift card and sales by day (not currently implemented)
-  const stats = {
-    giftCardUsage: {
-      totalRedeemed: 0,
-      totalTransactions: 0,
-      averageDiscount: 0
-    },
-    salesByDay: [
-      { day: "Mon", sales: 0 },
-      { day: "Tue", sales: 0 },
-      { day: "Wed", sales: 0 },
-      { day: "Thu", sales: 0 },
-      { day: "Fri", sales: 0 },
-      { day: "Sat", sales: 0 },
-      { day: "Sun", sales: 0 }
-    ]
-  }
 
   // Only submitted invoices (exclude Draft and Cancelled) for dashboard stats and cashier list
   const submittedInvoices = invoices.filter(
@@ -84,7 +64,7 @@ export default function DashboardPage() {
   }, [userInfo, isAdminUser, currentUserCashier])
 
   // Loading state - must be after all hooks
-  if (userInfoLoading || invoicesLoading) {
+  if (userInfoLoading || profileLoading || invoicesLoading || (!invoiceError && (isLoadingMore || totalLoaded < totalCount))) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -95,6 +75,9 @@ export default function DashboardPage() {
     );
   }
 
+  if (invoiceError) return <div className="p-8 text-red-600">Unable to load sales dashboard: {invoiceError}</div>
+  if (profileError || !posDetails?.company) return <div className="p-8 text-red-600">Unable to load the POS Profile company.</div>
+
   // Sales Dashboard is only for Sales Manager, System Manager or Administrator
   if (userInfo && !userInfo.is_admin_user) {
     navigate("/pos", { replace: true });
@@ -104,24 +87,22 @@ export default function DashboardPage() {
   // Filter data based on selected filters and user role
   const filteredInvoices = submittedInvoices.filter((invoice) => {
     const matchesCashier = cashierFilter === "all" || invoice.cashier === cashierFilter
-    const matchesPayment = paymentFilter === "all" || invoice.paymentMethod === paymentFilter
+    const matchesPayment = paymentFilter === "all" || invoice.paymentMethod === paymentFilter || invoice.payment_methods?.some((payment) => payment.mode_of_payment === paymentFilter)
 
     // Apply time range filter (blank = current session → do not restrict by date)
-    const today = new Date().toISOString().split("T")[0]
+    const today = new Date().toLocaleDateString("en-CA")
     const matchesTime =
-      (timeRange === "" && true) ||
+      (timeRange === "" && true) || (timeRange === "all") ||
       (timeRange === "today" && invoice.date === today) ||
       (timeRange === "week" && new Date(invoice.date) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) ||
       (timeRange === "month" && new Date(invoice.date) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
 
     // For current session: restrict to current POS opening entry
     const matchesOpening =
-      timeRange !== "" || !posDetails?.current_opening_entry
-        ? true
-        : invoice.custom_pos_opening_entry === posDetails.current_opening_entry
+      timeRange !== "" ? true : !!posDetails?.current_opening_entry && invoice.custom_pos_opening_entry === posDetails.current_opening_entry
 
     // Role-based filtering: Non-admin users only see invoices for their POS profile
-    const matchesPOSProfile = isAdminUser || !posDetails?.name || invoice.posProfile === posDetails.name
+    const matchesPOSProfile = invoice.company === posDetails.company
 
     return matchesCashier && matchesPayment && matchesTime && matchesOpening && matchesPOSProfile
   })
@@ -145,7 +126,7 @@ export default function DashboardPage() {
     const totalRevenue = filteredInvoices.reduce((sum: number, inv: SalesInvoice) => sum + inv.totalAmount, 0)
     const totalTransactions = filteredInvoices.length
     const averageOrderValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0
-    const totalItems = filteredInvoices.reduce((sum: number, inv: SalesInvoice) => sum + inv.items.length, 0)
+    const totalItems = filteredInvoices.reduce((sum: number, inv: SalesInvoice) => sum + inv.items.reduce((qty, item) => qty + (Number(item.qty) || 0), 0), 0)
     return { totalRevenue, totalTransactions, averageOrderValue, totalItems }
   })()
 
@@ -153,7 +134,7 @@ export default function DashboardPage() {
   const calculateSalesByHour = () => {
     if (timeRange !== "today") return []
 
-    const today = new Date().toISOString().split("T")[0]
+    const today = new Date().toLocaleDateString("en-CA")
     const todayInvoices = filteredInvoices.filter(inv => inv.date === today)
     const hourlySales: { [key: string]: number } = {}
 
@@ -207,12 +188,8 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
           if (!methodMap[method]) {
             methodMap[method] = { amount: 0, transactions: 0 }
           }
-          methodMap[method].amount += payment.amount
-          // Only count transaction once per invoice, not per payment method
-          // @ts-expect-error just ignore
-          if (invoice.payment_methods.indexOf(payment) === 0) {
-            methodMap[method].transactions += 1
-          }
+          methodMap[method].amount += Number(payment.base_amount ?? payment.amount)
+          methodMap[method].transactions += 1
         })
       } else {
         // Fallback to single payment method (backward compatibility)
@@ -319,7 +296,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
           productStats[productKey] = { name: item.item_name || item.item_code || 'Unknown', sales: 0, revenue: 0 }
         }
         productStats[productKey].sales += item.qty || 0
-        productStats[productKey].revenue += (item.rate || 0) * (item.qty || 0)
+        productStats[productKey].revenue += Number((item as any).base_amount ?? ((item.rate || 0) * (item.qty || 0)))
       })
     })
 
@@ -376,10 +353,11 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                     onChange={(e) => setTimeRange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-beveren-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
+                    <option value="all">All Time</option>
                     <option value="">Current POS Session</option>
                     <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
+                    <option value="week">Last 7 Days</option>
+                    <option value="month">Last 30 Days</option>
                   </select>
                 </div>
                 <div>
@@ -415,8 +393,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-beveren-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="all">All Methods</option>
-                    <option value="Cash">Cash</option>
-                    <option value="Debit Card">Debit Card</option>
+                    {paymentMethodsData.map(({ method }) => <option key={method} value={method}>{method}</option>)}
                   </select>
                 </div>
                 <div className="flex items-end">
@@ -442,7 +419,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Total Revenue</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(filteredStats.totalRevenue, posDetails?.currency || 'USD')}
+                    {formatCurrency(filteredStats.totalRevenue, posDetails?.company_currency || 'USD')}
                   </p>
                   <div className="flex items-center mt-2">
                     <TrendingUp className="w-4 h-4 text-orange-500 mr-1" />
@@ -480,7 +457,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Avg Order Value</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">
-                    {formatCurrency(filteredStats.averageOrderValue, posDetails?.currency || 'USD')}
+                    {formatCurrency(filteredStats.averageOrderValue, posDetails?.company_currency || 'USD')}
                   </p>
                   <div className="flex items-center mt-2">
                     <TrendingUp className="w-4 h-4 text-orange-500 mr-1" />
@@ -569,7 +546,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                                 height: `${height}px`,
                                 minHeight: "4px",
                               }}
-                              title={`${item.hour}: ${formatCurrency(item.sales, posDetails?.currency || 'USD')}`}
+                              title={`${item.hour}: ${formatCurrency(item.sales, posDetails?.company_currency || 'USD')}`}
                             ></div>
                           ) : (
                             <div className="relative w-full h-full">
@@ -598,7 +575,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                             </div>
                           )}
                           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                            {formatCurrency(item.sales, posDetails?.currency || 'USD')}
+                            {formatCurrency(item.sales, posDetails?.company_currency || 'USD')}
                           </div>
                         </div>
                         <span className="text-xs text-gray-500 dark:text-gray-400 mt-2 transform -rotate-45 origin-top-left">
@@ -611,7 +588,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                 <div className="mt-3 text-center">
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     Total Revenue: <span className="font-semibold text-beveren-600 dark:text-beveren-400">
-                      {formatCurrency(salesByHourData.reduce((sum, item) => sum + item.sales, 0), posDetails?.currency || 'USD')}
+                      {formatCurrency(salesByHourData.reduce((sum, item) => sum + item.sales, 0), posDetails?.company_currency || 'USD')}
                     </span>
                   </div>
                 </div>
@@ -636,7 +613,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(method.amount, posDetails?.currency || 'USD')}
+                          {formatCurrency(method.amount, posDetails?.company_currency || 'USD')}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                           {method.percentage.toFixed(1)}% • {method.transactions} txns
@@ -726,40 +703,6 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                 </div>
               </div>
             )}
-            {/* Gift Card Usage */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Gift Card Usage</h3>
-                <Gift className="w-5 h-5 text-orange-600" />
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Total Redeemed</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    {formatCurrency(stats.giftCardUsage.totalRedeemed, posDetails?.currency || 'USD')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Transactions</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    {stats.giftCardUsage.totalTransactions}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Avg Discount</span>
-                  <span className="font-semibold text-orange-600 dark:text-orange-400">
-                    {formatCurrency(stats.giftCardUsage.averageDiscount, posDetails?.currency || 'USD')}
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {((stats.giftCardUsage.totalTransactions / (filteredStats.totalTransactions || 1)) * 100).toFixed(1)}% of all
-                    transactions
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Top Cashier */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
@@ -784,7 +727,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                     {topPerformer.transactions} transactions
                   </p>
                   <p className="text-lg font-bold text-beveren-600 dark:text-beveren-400">
-                    {formatCurrency(topPerformer.sales, posDetails?.currency || 'USD')}
+                    {formatCurrency(topPerformer.sales, posDetails?.company_currency || 'USD')}
                   </p>
                   <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                     {filteredStats.totalRevenue > 0 ? ((topPerformer.sales / filteredStats.totalRevenue) * 100).toFixed(1) : 0}% of total sales
@@ -797,38 +740,6 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
               )}
             </div>
 
-            {/* Weekly Trend */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Weekly Trend</h3>
-                <Calendar className="w-5 h-5 text-gray-400" />
-              </div>
-              <div className="h-24 flex items-end justify-between space-x-1 mb-4">
-                {stats.salesByDay.map((item: { day: string; sales: number }, index: number) => (
-                  <div key={index} className="flex flex-col items-center flex-1 group">
-                    <div className="relative">
-                      <div
-                        className="w-full bg-beveren-600 dark:bg-beveren-500 rounded-t hover:bg-beveren-700 dark:hover:bg-beveren-400 transition-colors cursor-pointer"
-                        style={{
-                          height: `${(item.sales / Math.max(...stats.salesByDay.map((s: { day: string; sales: number }) => s.sales))) * 60}px`,
-                          minHeight: "4px",
-                        }}
-                        title={`${item.day}: ${formatCurrency(item.sales, posDetails?.currency || 'USD')}`}
-                      ></div>
-                      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                        {formatCurrency(item.sales, posDetails?.currency || 'USD')}
-                      </div>
-                    </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.day}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Best day: <span className="font-semibold text-beveren-600 dark:text-beveren-400">Friday</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Bottom Section */}
@@ -837,7 +748,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Selling Products</h3>
-                <button className="text-sm text-beveren-600 dark:text-beveren-400 hover:underline">View All</button>
+                <button onClick={() => navigate("/reports")} className="text-sm text-beveren-600 dark:text-beveren-400 hover:underline">View All</button>
               </div>
               <div className="space-y-3">
                 {topProducts.map((product, index) => (
@@ -857,9 +768,9 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-gray-900 dark:text-white">{formatCurrency(product.revenue, posDetails?.currency || 'USD')}</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{formatCurrency(product.revenue, posDetails?.company_currency || 'USD')}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatCurrency(product.sales > 0 ? (product.revenue / product.sales) : 0, posDetails?.currency || 'USD')} avg
+                        {formatCurrency(product.sales > 0 ? (product.revenue / product.sales) : 0, posDetails?.company_currency || 'USD')} avg
                       </div>
                     </div>
                   </div>
@@ -877,7 +788,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
                 <button
-                  onClick={() => navigate("/closing_shift")}
+                  onClick={() => navigate("/reports")}
                   className="text-sm text-beveren-600 dark:text-beveren-400 hover:underline"
                 >
                   View All Reports
@@ -906,7 +817,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(transaction.totalAmount, transaction.currency || posDetails?.currency || 'USD')}
+                        {formatCurrency(transaction.totalAmount, posDetails?.company_currency || 'USD')}
                       </div>
                       <div
                         className={`text-xs ${
@@ -984,10 +895,11 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                   onChange={(e) => setTimeRange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-beveren-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
+                  <option value="all">All Time</option>
                   <option value="">Current POS Session</option>
                   <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
+                  <option value="week">Last 7 Days</option>
+                  <option value="month">Last 30 Days</option>
                 </select>
               </div>
               <div>
@@ -1023,8 +935,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-beveren-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="all">All Methods</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Debit Card">Debit Card</option>
+                  {paymentMethodsData.map(({ method }) => <option key={method} value={method}>{method}</option>)}
                 </select>
               </div>
               <div className="flex items-end">
@@ -1050,7 +961,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Revenue</p>
                 <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatCurrency(filteredStats.totalRevenue, posDetails?.currency || 'USD')}
+                  {formatCurrency(filteredStats.totalRevenue, posDetails?.company_currency || 'USD')}
                 </p>
                 <div className="flex items-center mt-2">
                   <TrendingUp className="w-4 h-4 text-orange-500 mr-1" />
@@ -1088,7 +999,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Avg Order Value</p>
                 <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatCurrency(filteredStats.averageOrderValue, posDetails?.currency || 'USD')}
+                  {formatCurrency(filteredStats.averageOrderValue, posDetails?.company_currency || 'USD')}
                 </p>
                 <div className="flex items-center mt-2">
                   <TrendingUp className="w-4 h-4 text-orange-500 mr-1" />
@@ -1177,7 +1088,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                               height: `${height}px`,
                               minHeight: "4px",
                             }}
-                            title={`${item.hour}: ${formatCurrency(item.sales, posDetails?.currency || 'USD')}`}
+                            title={`${item.hour}: ${formatCurrency(item.sales, posDetails?.company_currency || 'USD')}`}
                           ></div>
                         ) : (
                           <div className="relative w-full h-full">
@@ -1206,7 +1117,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                           </div>
                         )}
                         <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                          {formatCurrency(item.sales, posDetails?.currency || 'USD')}
+                          {formatCurrency(item.sales, posDetails?.company_currency || 'USD')}
                         </div>
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-400 mt-2 transform -rotate-45 origin-top-left">
@@ -1219,7 +1130,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
               <div className="mt-4 text-center">
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Total Revenue: <span className="font-semibold text-beveren-600 dark:text-beveren-400">
-                    {formatCurrency(salesByHourData.reduce((sum, item) => sum + item.sales, 0), posDetails?.currency || 'USD')}
+                    {formatCurrency(salesByHourData.reduce((sum, item) => sum + item.sales, 0), posDetails?.company_currency || 'USD')}
                   </span>
                 </div>
               </div>
@@ -1244,7 +1155,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(method.amount, posDetails?.currency || 'USD')}
+                        {formatCurrency(method.amount, posDetails?.company_currency || 'USD')}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         {method.percentage.toFixed(1)}% • {method.transactions} txns
@@ -1360,7 +1271,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                   {topPerformer.transactions} transactions
                 </p>
                 <p className="text-lg font-bold text-beveren-600 dark:text-beveren-400">
-                  {formatCurrency(topPerformer.sales, posDetails?.currency || 'USD')}
+                  {formatCurrency(topPerformer.sales, posDetails?.company_currency || 'USD')}
                 </p>
                 <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                   {filteredStats.totalRevenue > 0 ? ((topPerformer.sales / filteredStats.totalRevenue) * 100).toFixed(1) : 0}% of total sales
@@ -1382,7 +1293,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
           <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Selling Products</h3>
-              <button className="text-sm text-beveren-600 dark:text-beveren-400 hover:underline">View All</button>
+              <button onClick={() => navigate("/reports")} className="text-sm text-beveren-600 dark:text-beveren-400 hover:underline">View All</button>
             </div>
             <div className="space-y-4">
               {topProducts.map((product, index) => (
@@ -1402,9 +1313,9 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-gray-900 dark:text-white">{formatCurrency(product.revenue, posDetails?.currency || 'USD')}</div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{formatCurrency(product.revenue, posDetails?.company_currency || 'USD')}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {formatCurrency(product.sales > 0 ? (product.revenue / product.sales) : 0, posDetails?.currency || 'USD')} avg
+                      {formatCurrency(product.sales > 0 ? (product.revenue / product.sales) : 0, posDetails?.company_currency || 'USD')} avg
                     </div>
                   </div>
                 </div>
@@ -1422,7 +1333,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Transactions</h3>
               <button
-                onClick={() => navigate("/closing_shift")}
+                onClick={() => navigate("/reports")}
                 className="text-sm text-beveren-600 dark:text-beveren-400 hover:underline"
               >
                 View All Reports
@@ -1451,7 +1362,7 @@ if (Object.prototype.hasOwnProperty.call(hourlySales, hour)) {
                   </div>
                   <div className="text-right">
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {formatCurrency(transaction.totalAmount, transaction.currency || posDetails?.currency || 'USD')}
+                      {formatCurrency(transaction.totalAmount, posDetails?.company_currency || 'USD')}
                     </div>
                     <div
                       className={`text-xs ${

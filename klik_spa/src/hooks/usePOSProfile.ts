@@ -105,6 +105,8 @@ export function usePOSProfiles() {
 
 export type POSDetails = {
   name?: string;
+  company?: string;
+  company_currency?: string;
   currency?: string;
   currency_symbol?: string;
   is_zatca_enabled?: boolean;

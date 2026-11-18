@@ -83,10 +83,6 @@ export function handlePrintInvoice(invoiceData: Invoice | null) {
         height: 100% !important;
       }
     }
-    @page {
-      size: A4;
-      margin: 1cm;
-    }
   `;
   printOverlay.className = 'print-overlay';
   document.head.appendChild(printStyles);

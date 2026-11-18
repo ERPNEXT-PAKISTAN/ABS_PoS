@@ -17,6 +17,7 @@ import HomePage from "../pages/HomePage";
 import InvoiceHistoryPage from "../pages/InvoiceHistory";
 import InvoiceViewPage from "../pages/InvoiceViewPage";
 import CustomerDetailsPage from "../pages/CustomerPageDetails";
+import ReportsPage from "../components/ReportsPage";
 
 const router = createBrowserRouter([
   {
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
         path: "dashboard",
         element: <ProtectedRoute element={<DashboardPage />} />,
       },
+      { path: "reports", element: <ProtectedRoute element={<ReportsPage />} /> },
       {
         path: "closing_shift",
         element: <ProtectedRoute element={<ClosingShiftPage />} />,

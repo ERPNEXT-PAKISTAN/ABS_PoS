@@ -7,6 +7,17 @@ from frappe import _
 from klik_pos.klik_pos.utils import get_current_pos_profile
 
 
+def _allowed_customer_groups(profile):
+	"""Expand configured group nodes to include their descendant groups."""
+	selected = [row.customer_group for row in (profile.get("customer_groups") or []) if row.customer_group]
+	if not selected:
+		return []
+	groups = set(selected)
+	for group in frappe.get_all("Customer Group", filters={"name": ["in", selected]}, fields=["lft", "rgt"]):
+		groups.update(frappe.get_all("Customer Group", filters={"lft": [">=", group.lft], "rgt": ["<=", group.rgt]}, pluck="name"))
+	return sorted(groups)
+
+
 @frappe.whitelist()
 def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 	"""
@@ -21,9 +32,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 		result = []
 
 		# Get customer groups from POS profile if configured
-		customer_group_names = []
-		if hasattr(pos_profile, "customer_groups") and pos_profile.customer_groups:
-			customer_group_names = [d.customer_group for d in pos_profile.customer_groups if d.customer_group]
+		customer_group_names = _allowed_customer_groups(pos_profile)
 
 		# Get user permissions for Customer doctype
 		user_permitted = frappe.permissions.get_user_permissions(frappe.session.user)
@@ -50,13 +59,6 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 			# Build optional customer_type filter
 			cust_type_filter = ""
 			cust_type_params = []
-			if business_type == "B2B":
-				cust_type_filter = "AND c.customer_type = %s"
-				cust_type_params.append("Company")
-			elif business_type == "B2C":
-				cust_type_filter = "AND c.customer_type = %s"
-				cust_type_params.append("Individual")
-			print("Busines type", business_type)
 			# Build optional customer_group filter
 			cust_group_filter = ""
 			cust_group_params = []
@@ -90,7 +92,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
                 LEFT JOIN `tabContact Email` ce ON ce.parent = ct.name
                 LEFT JOIN `tabContact Phone` cp ON cp.parent = ct.name
                 WHERE (
-                    c.customer_name LIKE %s OR c.name LIKE %s OR
+                    c.customer_name LIKE %s OR c.name LIKE %s OR c.customer_name_in_arabic LIKE %s OR
                     ce.email_id LIKE %s OR cp.phone LIKE %s
                 )
                 {cust_type_filter}
@@ -101,6 +103,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
                 """,
 				tuple(
 					[
+						like_param,
 						like_param,
 						like_param,
 						like_param,
@@ -125,7 +128,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
                 LEFT JOIN `tabContact Email` ce ON ce.parent = ct.name
                 LEFT JOIN `tabContact Phone` cp ON cp.parent = ct.name
                 WHERE (
-                    c.customer_name LIKE %s OR c.name LIKE %s OR
+                    c.customer_name LIKE %s OR c.name LIKE %s OR c.customer_name_in_arabic LIKE %s OR
                     ce.email_id LIKE %s OR cp.phone LIKE %s
                 )
                 {cust_type_filter}
@@ -134,6 +137,7 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
                 """,
 				tuple(
 					[
+						like_param,
 						like_param,
 						like_param,
 						like_param,
@@ -149,10 +153,6 @@ def get_customers(limit: int = 100, start: int = 0, search: str = ""):
 		else:
 			# Original logic for when no search term - keep capped limit for performance
 			filters = {}
-			if business_type == "B2B":
-				filters["customer_type"] = "Company"
-			elif business_type == "B2C":
-				filters["customer_type"] = "Individual"
 
 			# Add customer group filtering if configured
 			if customer_group_names:
@@ -868,9 +868,7 @@ def check_customer_permission(customer_name):
 		business_type = getattr(pos_profile, "custom_business_type", "B2C")
 
 		# Get customer groups from POS profile if configured
-		customer_group_names = []
-		if hasattr(pos_profile, "customer_groups") and pos_profile.customer_groups:
-			customer_group_names = [d.customer_group for d in pos_profile.customer_groups if d.customer_group]
+		customer_group_names = _allowed_customer_groups(pos_profile)
 
 		# Get user permissions for Customer doctype
 		user_permitted = frappe.permissions.get_user_permissions(frappe.session.user)
@@ -895,13 +893,6 @@ def check_customer_permission(customer_name):
 			customer = frappe.get_doc("Customer", customer_name)
 
 			# Check business type
-			if business_type == "B2C" and customer.customer_type == "Company":
-				has_permission = False
-				frappe.logger().info(f"B2C business type: Customer {customer_name} is Company type")
-			elif business_type == "B2B" and customer.customer_type == "Individual":
-				has_permission = False
-				frappe.logger().info(f"B2B business type: Customer {customer_name} is Individual type")
-
 			# Check customer groups if configured
 			if has_permission and customer_group_names:
 				if customer.customer_group not in customer_group_names:

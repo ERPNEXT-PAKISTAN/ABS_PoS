@@ -26,25 +26,10 @@ export default function CustomersPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [prefilledData, setPrefilledData] = useState<{name?: string, email?: string, phone?: string}>({})
-  const [globalTotals, setGlobalTotals] = useState<{ total_customers: number; total_invoices: number } | null>(null)
 
   // Use the customers hook with search to fetch from server when searching
   const { customers, isLoading, error, totalCount, loadMore } = useCustomers(searchQuery)
 
-  useEffect(() => {
-    // Fetch global totals for accurate cards
-    ;(async () => {
-      try {
-        const res = await fetch('/api/method/klik_pos.api.customer.get_global_totals')
-        const data = await res.json()
-        if (data?.message?.success) {
-          setGlobalTotals({ total_customers: data.message.total_customers, total_invoices: data.message.total_invoices })
-        }
-      } catch {
-        // Silently handle errors
-      }
-    })()
-  }, [])
 
   // Filter and search customers (client-side filtering for smooth experience)
   const filteredCustomers = useMemo(() => {
@@ -56,7 +41,7 @@ export default function CustomersPage() {
     const list = customers
 
     // Sort by creation date (most recent first)
-    return list.sort((a, b) => {
+    return [...list].sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
       return dateB - dateA
@@ -219,7 +204,7 @@ export default function CustomersPage() {
                   <Users className="text-orange-500" size={24} />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Customers</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{customers.length} of {globalTotals?.total_customers ?? totalCount ?? customers.length}</p>
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{customers.length} of {totalCount}</p>
                   </div>
                 </div>
               </div>
@@ -230,8 +215,8 @@ export default function CustomersPage() {
                     <span className="text-white text-xs font-bold">📦</span>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Invoices</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{globalTotals?.total_invoices ?? stats.totalOrders}</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">POS orders for loaded customers</p>
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalOrders}</p>
                   </div>
                 </div>
               </div>
@@ -470,7 +455,7 @@ export default function CustomersPage() {
                   <Users className="text-orange-500" size={24} />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Customers</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{customers.length} of {totalCount || customers.length}</p>
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{customers.length} of {totalCount}</p>
                   </div>
                 </div>
               </div>
@@ -481,7 +466,7 @@ export default function CustomersPage() {
                   <span className="text-white text-xs font-bold">📦</span>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Orders</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">POS orders for loaded customers</p>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalOrders}</p>
                 </div>
               </div>
@@ -635,6 +620,7 @@ export default function CustomersPage() {
                 </tbody>
               </table>
             </div>
+            {totalCount > customers.length && <div className="p-4 text-center"><button type="button" disabled={isLoading} onClick={loadMore} className="px-4 py-2 bg-beveren-600 text-white rounded-lg">Load More ({customers.length}/{totalCount})</button></div>}
 
 
           </div>

@@ -1,5 +1,5 @@
 import { useBranding } from "../hooks/useBranding"
-import { Receipt, Grid3X3, BarChart3, Users, MonitorX } from "lucide-react"
+import { Receipt, Grid3X3, BarChart3, Users, MonitorX, FileText } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useUserInfo } from "../hooks/useUserInfo"
 
@@ -17,6 +17,7 @@ export default function RetailSidebar() {
      { icon: Receipt, path: "/invoice", label: "InvoiceHistory" },
      { icon: Users, path: "/customers", label: "Customers" },
     { icon: BarChart3, path: "/dashboard", label: "Dashboard", requiresSalesDashboard: true },
+    { icon: FileText, path: "/reports", label: "Reports" },
     { icon: Grid3X3, path: "/setup", label: "ABS Setup" },
     { icon: MonitorX, path: "/closing_shift", label: "Closing Shift" },
 

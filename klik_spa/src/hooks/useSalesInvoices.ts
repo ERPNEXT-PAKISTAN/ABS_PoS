@@ -144,6 +144,7 @@ export function useSalesInvoices(
           currency: invoice.currency || "USD",
           notes: invoice.remarks || "",
           posProfile: invoice.pos_profile || "",
+          company: invoice.company || "",
           custom_pos_opening_entry: invoice.custom_pos_opening_entry || "",
           canReturn: canReturn,
         };
@@ -194,20 +195,10 @@ export function useSalesInvoices(
   // This helps when client-side filtering reduces the visible count significantly
   // Auto-loads up to 10 pages (1000 invoices) to ensure users see all their filtered invoices
   useEffect(() => {
-    if (!isLoading && !isLoadingMore && totalCount > 0 && totalCount <= 1000 && hasMore) {
-      const remainingPages = Math.ceil((totalCount - totalLoaded) / LIMIT);
-      if (remainingPages > 0 && remainingPages <= 10) {
-        // Only auto-load if there are 10 or fewer pages remaining (to avoid too many requests)
-        const loadAllPages = async () => {
-          for (let page = currentPage + 1; page <= currentPage + remainingPages; page++) {
-            if (!hasMore) break; // Stop if we've loaded everything
-            await fetchInvoices(page, true);
-          }
-        };
-        loadAllPages();
-      }
+    if (!error && !isLoading && !isLoadingMore && totalLoaded < totalCount && hasMore && (submittedOnly || totalCount <= 1000)) {
+      fetchInvoices(currentPage + 1, true);
     }
-  }, [totalCount, totalLoaded, hasMore, isLoading, isLoadingMore, currentPage, fetchInvoices]);
+  }, [totalCount, totalLoaded, hasMore, isLoading, isLoadingMore, currentPage, fetchInvoices, submittedOnly, error]);
 
   return {
     invoices,

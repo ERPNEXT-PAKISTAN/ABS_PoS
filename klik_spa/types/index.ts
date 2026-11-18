@@ -119,6 +119,7 @@ export interface SalesInvoice {
   giftCardCode: string | null;
   taxAmount: number;
   totalAmount: number;
+  company?: string;
   paymentMethod: "Cash" | "Debit Card";
   payment_methods?: Array<{
     mode_of_payment: string;

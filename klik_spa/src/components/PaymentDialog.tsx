@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
 
   subtractCurrency,
@@ -140,6 +140,7 @@ export default function PaymentDialog({
 }: PaymentDialogProps) {
   const [selectedSalesTaxCharges, setSelectedSalesTaxCharges] = useState("");
   const [paymentAmounts, setPaymentAmounts] = useState<PaymentAmount>({});
+  const autoPaymentMethod = useRef<string | null>(null);
   const [activeMethodId, setActiveMethodId] = useState<string | null>(null);
   // Track which payment method was last modified for round-off targeting
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -589,11 +590,19 @@ export default function PaymentDialog({
       const defaultMode = modes.find((mode) => mode.default === 1);
       if (defaultMode && Object.keys(paymentAmounts).length === 0) {
         const defaultAmount = parseFloat(calculations.grandTotal.toFixed(2));
+        autoPaymentMethod.current = defaultMode.mode_of_payment;
         setLastModifiedMethodId(defaultMode.mode_of_payment); // Track the auto-filled method
         setPaymentAmounts({ [defaultMode.mode_of_payment]: defaultAmount });
       }
     }
   }, [isOpen, modes, calculations.grandTotal, isB2B, isB2C]);
+
+  useEffect(() => {
+    const method = autoPaymentMethod.current;
+    if (!isOpen || invoiceSubmitted || isProcessingPayment || !method) return;
+    const amount = roundCurrency(calculations.grandTotal);
+    setPaymentAmounts(prev => prev[method] === amount ? prev : { ...prev, [method]: amount });
+  }, [isOpen, calculations.grandTotal, invoiceSubmitted, isProcessingPayment]);
 
   // Auto-print when invoice is submitted and auto-print is enabled
   useEffect(() => {
@@ -685,6 +694,7 @@ export default function PaymentDialog({
 
   const handlePaymentAmountChange = (methodId: string, amount: string) => {
     if (invoiceSubmitted || isProcessingPayment) return;
+    autoPaymentMethod.current = null;
 
     const numericAmount = roundCurrency(parseFloat(amount) || 0);
 
@@ -702,6 +712,7 @@ export default function PaymentDialog({
   // Auto-fill payment method with grand total and clear others
   const handleAutoFillPayment = (methodId: string) => {
     if (invoiceSubmitted || isProcessingPayment) return;
+    autoPaymentMethod.current = methodId;
 
     const grandTotal = calculations.grandTotal;
     const newPaymentAmounts: PaymentAmount = {};
@@ -751,6 +762,7 @@ export default function PaymentDialog({
   // Handle manual amount adjustment
   const handleManualAmountChange = (methodId: string, amount: string) => {
     if (invoiceSubmitted || isProcessingPayment) return;
+    autoPaymentMethod.current = null;
 
     const numericAmount = roundCurrency(parseFloat(amount) || 0);
     // const grandTotal = calculations.grandTotal;

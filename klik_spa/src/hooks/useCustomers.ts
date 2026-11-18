@@ -1,6 +1,6 @@
 
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Customer } from "../types/customer";
 
 interface ERPCustomer {
@@ -37,9 +37,12 @@ export function useCustomers(searchQuery?: string) {
   const [start, setStart] = useState<number>(0);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [totalCount, setTotalCount] = useState<number>(0);
+  const requestId = useRef(0);
 
   const fetchCustomers = async (search?: string, append = false) => {
+    const id = ++requestId.current;
     setIsLoading(true);
+    setError(null);
 
     try {
       const params = new URLSearchParams();
@@ -51,6 +54,8 @@ export function useCustomers(searchQuery?: string) {
 
       const response = await fetch(`/api/method/klik_pos.api.customer.get_customers${searchParam}`);
       const resData = await response.json();
+
+      if (id !== requestId.current) return;
 
       if (!resData.message.success) {
         throw new Error(resData.error || "Failed to fetch customers");
@@ -97,13 +102,14 @@ export function useCustomers(searchQuery?: string) {
       setHasMore(nextStart < total);
 
     } catch (err) {
-      setError(err as Error);
+      if (id === requestId.current) setError(err as Error);
     } finally {
-      setIsLoading(false);
+      if (id === requestId.current) setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    requestId.current++;
     // Reset paging on new search
     setStart(0);
     setHasMore(false);

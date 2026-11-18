@@ -2268,7 +2268,7 @@ export default function OrderSummary({
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const { customers, isLoading, refetch: refetchCustomers } = useCustomers(customerSearchQuery);
+  const { customers, isLoading, refetch: refetchCustomers, hasMore, loadMore } = useCustomers(customerSearchQuery);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { refetch: _refetchProducts, refreshStockOnly, updateStockForItems: _updateStockForItems, updateBatchQuantitiesForItems } = useProducts();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -2461,22 +2461,7 @@ export default function OrderSummary({
   };
 
   // Filtered customers based on search query
-  const filteredCustomers =
-    customerSearchQuery.trim() === ""
-      ? customers
-      : customers.filter(
-          (customer) =>
-            customer.name
-              .toLowerCase()
-              .includes(customerSearchQuery.toLowerCase()) ||
-            customer.email
-              .toLowerCase()
-              .includes(customerSearchQuery.toLowerCase()) ||
-            customer.phone.includes(customerSearchQuery) ||
-            customer.tags.some((tag) =>
-              tag.toLowerCase().includes(customerSearchQuery.toLowerCase())
-            )
-        );
+  const filteredCustomers = customers;
 
   const validateCustomer = () => {
     if (!selectedCustomer) {
@@ -2979,7 +2964,7 @@ export default function OrderSummary({
                 {/* Customer Dropdown */}
                 {showCustomerDropdown && filteredCustomers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
-                    {filteredCustomers.slice(0, 8).map((customer) => (
+                    {filteredCustomers.map((customer) => (
                       <button
                         key={customer.id}
                         onClick={() => handleCustomerSelect(customer)}
@@ -2999,6 +2984,7 @@ export default function OrderSummary({
                         </div>
                       </button>
                     ))}
+                    {hasMore && <button type="button" disabled={isLoading} onClick={() => loadMore()} className="w-full p-3 text-center text-blue-600">{isLoading ? "Loading..." : "Load more customers"}</button>}
                   </div>
                 )}
               </div>
@@ -3076,7 +3062,7 @@ export default function OrderSummary({
 
               {showCustomerDropdown && filteredCustomers.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
-                  {filteredCustomers.slice(0, 8).map((customer) => (
+                  {filteredCustomers.map((customer) => (
                     <button
                       key={customer.id}
                       onClick={() => handleCustomerSelect(customer)}
@@ -3096,6 +3082,7 @@ export default function OrderSummary({
                       </div>
                     </button>
                   ))}
+                  {hasMore && <button type="button" disabled={isLoading} onClick={() => loadMore()} className="w-full p-3 text-center text-blue-600">{isLoading ? "Loading..." : "Load more customers"}</button>}
                 </div>
               )}
             </div>
