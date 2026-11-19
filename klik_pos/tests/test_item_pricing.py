@@ -10,27 +10,27 @@ from klik_pos.api.item_pricing import calculate_price, summarize_purchases, numb
 class TestItemPricing(unittest.TestCase):
 	def test_thirty_percent_is_markup_not_margin(self):
 		q=calculate_price('100','30')
-		self.assertEqual(q['net_selling_price'],'130.00')
+		self.assertEqual(q['net_selling_price'],'130')
 		self.assertAlmostEqual(float(q['gross_margin_percentage']),23.076923,places=5)
 
-	def test_inclusive_vat_preserves_net_profit(self):
+	def test_inclusive_vat_uses_rounded_gross_price(self):
 		q=calculate_price('100','30',inclusive_rate='15')
-		self.assertEqual(q['net_selling_price'],'130.00')
-		self.assertEqual(q['selling_price'],'149.50')
-		self.assertEqual(q['tax_amount'],'19.50')
+		self.assertEqual(q['net_selling_price'],'130.43')
+		self.assertEqual(q['selling_price'],'150')
+		self.assertEqual(q['tax_amount'],'19.57')
 
 	def test_pack_conversion_is_applied_before_markup(self):
 		q=calculate_price('10','30',factor='12')
 		self.assertEqual(q['unit_cost'],'120')
-		self.assertEqual(q['net_selling_price'],'156.00')
+		self.assertEqual(q['net_selling_price'],'156')
 
 	def test_currency_rounding_is_decimal_half_up(self):
-		self.assertEqual(calculate_price('1.005',0)['net_selling_price'],'1.01')
+		self.assertEqual(calculate_price('1.5',0)['net_selling_price'],'2')
 
 	def test_effective_margin_reflects_rounded_price(self):
-		q=calculate_price('.004','30')
-		self.assertEqual(q['net_selling_price'],'0.01')
-		self.assertEqual(Decimal(q['gross_margin_percentage']),Decimal('60'))
+		q=calculate_price('1.2','30')
+		self.assertEqual(q['net_selling_price'],'2')
+		self.assertEqual(Decimal(q['gross_margin_percentage']),Decimal('40'))
 
 	def test_invalid_values_are_rejected(self):
 		for value in ['-1','NaN','Infinity','text','']:
@@ -63,7 +63,7 @@ class TestItemPricing(unittest.TestCase):
 		c={'factor':'1','profile':'P','currency':'SAR','uom':'Nos','price_list':'PL','current_price':None,'purchases':{'versions':[]},'tax':{'inclusive':False,'supported':True,'rate':None},'policy':None,'can_save':True,'blockers':[]}
 		with patch('klik_pos.api.item_pricing.context',return_value=c):
 			r=preview_item_price('ITEM',cost_basis='Manual',manual_cost='100',markup_percentage='30')
-			self.assertEqual(r['quote']['selling_price'],'130.00');self.assertTrue(r['quote']['snapshot'])
+			self.assertEqual(r['quote']['selling_price'],'130');self.assertTrue(r['quote']['snapshot'])
 
 	def test_non_manager_cannot_save(self):
 		with patch('klik_pos.api.item_pricing.require_user'),patch('klik_pos.api.item_pricing.is_manager',return_value=False),patch('klik_pos.api.item_pricing.context') as lookup:

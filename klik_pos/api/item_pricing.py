@@ -30,12 +30,13 @@ def calculate_price(cost, percentage, factor=1, inclusive_rate=None):
 	raw_net_price = net_cost * (1 + percentage / 100)
 	if raw_net_price >= Decimal('1000000000000'):
 		frappe.throw(_('Calculated selling price is too large.'))
-	net_price = raw_net_price.quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
 	rate = number(inclusive_rate or 0, 'Tax rate')
-	raw_stored = net_price * (1 + rate / 100)
+	raw_stored = raw_net_price * (1 + rate / 100)
 	if raw_stored >= Decimal('1000000000000'):
 		frappe.throw(_('Calculated selling price is too large.'))
-	stored = raw_stored.quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
+	stored = raw_stored.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+	# For tax-inclusive prices, derive the net value from the actual rounded price.
+	net_price = (stored / (1 + rate / 100)).quantize(Decimal('.01'), rounding=ROUND_HALF_UP) if rate else stored
 	if stored >= Decimal('1000000000000'):
 		frappe.throw(_('Calculated selling price is too large.'))
 	return {'unit_cost': str(net_cost), 'net_selling_price': str(net_price), 'tax_amount': str(stored-net_price),
