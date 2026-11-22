@@ -10,12 +10,15 @@ def sync_site_branding():
 		names = frappe.get_all('Desktop Icon', filters={'app': 'klik_pos', 'icon_type': 'App'}, pluck='name')
 		docs = [frappe.get_doc('Desktop Icon', name) for name in names]
 		if not docs:
-			docs = [frappe.get_doc({'doctype': 'Desktop Icon', 'app': 'klik_pos', 'icon_type': 'App', 'standard': 0})]
+			doc = frappe.new_doc('Desktop Icon')
+			doc.app = 'klik_pos'
+			doc.icon_type = 'App'
+			doc.standard = 0
+			docs = [doc]
 		for doc in docs:
-			if not doc.is_new() and doc.name != branding['business_name']:
-				frappe.rename_doc('Desktop Icon', doc.name, branding['business_name'], force=True)
-				doc = frappe.get_doc('Desktop Icon', branding['business_name'])
 			doc.label = branding['business_name']
+			if doc.is_new() and frappe.db.exists('Desktop Icon', doc.label):
+				doc.label = f"{doc.label} (ABS PoS)"
 			doc.link_type = 'External'
 			doc.link_to = None
 			doc.link = '/abs_pos/pos'
