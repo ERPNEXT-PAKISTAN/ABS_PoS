@@ -34,7 +34,16 @@ bench --site "$ABS_SITE" list-apps
 bench --site "$ABS_SITE" backup --with-files
 
 git clone --branch develop https://github.com/ERPNEXT-PAKISTAN/ABS_PoS.git apps/klik_pos
-grep -qxF 'klik_pos' sites/apps.txt || printf '%s\n' 'klik_pos' >> sites/apps.txt
+python3 - <<'PY'
+from pathlib import Path
+path = Path('sites/apps.txt')
+contents = path.read_text()
+if 'klik_pos' not in contents.splitlines():
+    with path.open('a') as apps_file:
+        if contents and not contents.endswith(('\n', '\r')):
+            apps_file.write('\n')
+        apps_file.write('klik_pos\n')
+PY
 bench setup requirements --python klik_pos
 bench --site "$ABS_SITE" install-app klik_pos
 bench --site "$ABS_SITE" migrate
@@ -44,6 +53,35 @@ bench --site "$ABS_SITE" list-apps
 ```
 
 The explicit clone directory matters: Bench versions may use the Git repository name as the folder name, while this app is installed as `klik_pos`. Do not run the clone if `apps/klik_pos` already exists; use the update instructions below.
+
+### Recover from `No module named 'hrmsklik_pos'`
+
+An older version of these instructions could join the last line in `sites/apps.txt` to `klik_pos` when the file had no final newline. If the error names `hrmsklik_pos`, back up and correct the app list, then finish the interrupted install. Run this on the affected bench, using the actual site name:
+
+```bash
+cd ~/frappe-bench
+ABS_SITE=your-site-name
+cp sites/apps.txt sites/apps.txt.before-abs-repair
+python3 - <<'PY'
+from pathlib import Path
+path = Path('sites/apps.txt')
+lines = path.read_text().splitlines()
+fixed = []
+for line in lines:
+    if line == 'hrmsklik_pos':
+        fixed.extend(['hrms', 'klik_pos'])
+    else:
+        fixed.append(line)
+if 'klik_pos' not in fixed:
+    fixed.append('klik_pos')
+path.write_text('\n'.join(dict.fromkeys(fixed)) + '\n')
+PY
+cat sites/apps.txt
+bench setup requirements --python klik_pos
+bench --site "$ABS_SITE" list-apps
+```
+
+If `klik_pos` is absent from the site's app list, run `bench --site "$ABS_SITE" install-app klik_pos`. Then run `bench --site "$ABS_SITE" migrate`, `bench build --app klik_pos`, `bench --site "$ABS_SITE" clear-cache`, and reload the web processes. If the invalid name has a different prefix or you are unsure which apps belong in the file, restore the backup and inspect the app names before editing.
 
 The repository contains a built POS frontend. To rebuild it when developing or when required after a source update:
 
