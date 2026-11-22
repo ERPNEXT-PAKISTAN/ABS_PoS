@@ -1,235 +1,121 @@
 # ABS PoS
 
-ABS PoS is maintained in the ERPNEXT-PAKISTAN/ABS_PoS fork, based on KLiK PoS. This ABS branch targets Frappe/ERPNext v16. The internal Frappe package remains `klik_pos`.
+ABS PoS is a point-of-sale app for Frappe and ERPNext v16, maintained in [ERPNEXT-PAKISTAN/ABS_PoS](https://github.com/ERPNEXT-PAKISTAN/ABS_PoS). It is based on [KLiK PoS](https://github.com/Beveren-Software-Inc/KLiK_PoS). The repository name is `ABS_PoS`; the internal Frappe app, Python package and bench directory are still named **`klik_pos`**.
 
-The first ABS milestone adds configurable branding/setup, optional ZATCA detection, cashier access checks, transactional checkout request protection and scoped cart recovery. Item History also includes a [purchase-cost and markup calculator](docs/item-pricing.md). Read [deployment and validation notes](docs/abs-pos-milestone-1.md) before customer rollout. Beveren ZATCA remains an optional, separately tested integration.
+## What is included
 
-Original project documentation and attribution follow below. Existing license notices are retained.
+- Retail POS with customers, items, barcode scanning, payment methods, cash received and change, invoice discounts and returns, subject to POS Profile settings.
+- Item type filtering using the Item's `custom_type` Select field.
+- Item History with recent sales, purchase and selected-customer transactions; stock balances by permitted warehouse; and a purchase-cost markup calculator.
+- Material Transfer from the item Stock tab. Authorized users can select warehouses, quantity, remarks and required batch or serial numbers, then create and submit an ERPNext Stock Entry.
+- Customer, address, item, item group and UOM Arabic fields, with bilingual customer details in POS.
+- Sales dashboard, item-wise POS sales table and links to ERPNext reports.
+- ABS branding and setup, POS Profile configuration and selectable Sales Invoice print formats.
 
----
+The calculator rounds the selling price it saves to the nearest whole currency unit. See [item pricing](docs/item-pricing.md) for the calculation, permissions and tax handling.
 
-<div align="center" markdown="1">
+## Requirements
 
-<!-- <img src=".github/klik-logo.svg" alt="KLiK PoS logo" width="80"/> -->
-<h1>KLiK PoS</h1>
+- An existing Frappe/ERPNext v16 bench and site, with ERPNext installed on the site.
+- Git and the Python, Node.js and Yarn environment required by that bench.
+- Access to the bench and a site backup before installation or update. On production systems, schedule the update and process reload appropriately.
 
-[![CI](https://github.com/Beveren-Software-Inc/KLiK_PoS/actions/workflows/ci.yaml/badge.svg?branch=develop)](https://github.com/Beveren-Software-Inc/KLiK_PoS/actions/workflows/ci.yaml) <br>
+The optional ZATCA integration is separate. ABS PoS can be installed without it; installing ABS PoS alone does not establish ZATCA compliance. Test onboarding, invoice reporting, returns and print formats separately for each Saudi deployment. See [deployment and validation notes](docs/abs-pos-milestone-1.md).
 
+## Install on a new site
 
-**Modern Point of Sale for Retail Businesses**
-
-
-</div>
-
-<div align="center">
-	<img src="./docs/screenshots/PoS_Hero_Image.png" alt="Hero Image" width="100%" />
-</div>
-<br />
-<div align="center">
-	<a href="https://beverensoftware.com/">Website</a>
-	-
-	<a href="https://github.com/Beveren-Software-Inc/klik_pos">Documentation</a>
-</div>
-
----
-
-## KLiK PoS
-KLiK PoS is a 100% open-source Point of Sale for ERPNext - simple, modern, responsive, and feature-rich system designed for retail businesses.
-
----
-
-### Motivation
-The default ERPNext PoS often fall short. They lack strong UX design, miss key compliance requirements (such as ZATCA tax regulations), and have limited social media integration—resulting in a subpar overall experience. Many of ERPNext’s older POS solutions are outdated, don’t support newer versions (v15 and above), and no longer meet today’s business needs.
-
-KLiK PoS was built to close this gap—offering a simple, modern, compliant, and feature-rich POS system designed specifically for ERPNext. Our goal is to deliver a seamless, enjoyable checkout experience—whether in-store or on the go—empowering sales teams to sell smarter, stay compliant, and serve customers with speed and confidence.
-
----
-
-### Key Features
-
-- **ZATCA Compliance**: Built-in ZATCA compliance by default for Saudi Arabian tax regulations
-- **Flexible Sales Modes**: Supports B2C, B2B, or hybrid modes to suit different business needs
-- **Smart Invoice Sharing**: Native Email, WhatsApp, and SMS integration for seamless invoice delivery
-- **Barcode Scanner Mode**: Dedicated scanner-only mode for fast sales through barcode scanning
-- **Multi-Invoice Credit Notes**: Create credit notes for single or multiple invoices effortlessly
-- **Customer Management**: Create or edit individual or business customers directly from PoS
-- **Payment Processing**: Support for multiple payment methods with seamless round-off (write-off) handling
-
-After installing KLiK PoS, a few extra configurations are required inside **POS Profile** and **KLiK PoS Settings** to unlock the full functionality.
-
-### POS Profile Settings
-
-Navigate to **POS Profile** in ERPNext and configure the following fields:
-<img width="1137" height="907" alt="image" src="https://github.com/user-attachments/assets/ce6446da-8646-4109-b1d9-bf065cbe4f4d" />
-
--   **Business Type**
-    Defines the type of customer allowed in the POS:
-
-    -   **B2C** → For walk-in individual customers. Payment is required immediately at checkout.
-
-    -   **B2B** → For company customers. Sales can be completed on credit (Can make instant payment, partial payment or pay later).
-
-    -   **B2C & B2B** → Both types allowed.
-        This directly controls how customers are fetched (Individual vs. Company) and whether credit sales are permitted.
-
--   **POS Print Format**
-    Select the print format to use when an invoice is submitted.
-
-    -   Default: Thermal printer–friendly format.
-
-    -   Custom formats: You may create your own print formats and select them here.
-
--   **Email Template**
-    Used when sending invoices via email.
-
-    -   If blank, a default template is used.
-
-    -   Recommended: Define your own email template for a consistent branding experience.
-
--   **WhatsApp Template**
- <img width="1271" height="731" alt="Screenshot 2025-09-28 at 10 32 30" src="https://github.com/user-attachments/assets/619d9b53-e467-4c5e-bfb4-fa69cd32837e" />
-
-    Used when sharing invoices via WhatsApp.
-
-    -   Templates must be registered and approved in the **WhatsApp Template** doctype.
-
-    -   If left blank, a fallback default will be used.
-
--   **Default View**
-Defines how items are displayed on the POS screen:
-        <img width="2922" height="1660" alt="image (1)" src="https://github.com/user-attachments/assets/00f7fb5b-7a63-4060-892f-d20d02b04462" />
-
-    -   **List View** → Compact list-style layout.
-
-    -   **Grid View** → Grid-style product cards (recommended for retail).
-
--   **Hide Expected Amount**
-    Controls cashier visibility at POS closing shift:
-
-    -   Enabled → Cashiers do not see the day’s expected sales amount; they must enter their counted cash manually.
-
-    -   Disabled → Cashiers see the expected amount before submitting closing entry.
-        _Admins and System Managers always have full visibility regardless of this setting._
-
--   **Enable WhatsApp / Enable SMS**
-
-    -   Enable these only if WhatsApp or SMS gateways are properly configured.
-
-    -   If not configured, leave unchecked to avoid errors during invoice sharing.
-
--   **Use Scanner Fully**
-
-    -   When enabled, items can only be added via barcode scanner.
-
-    -   Disables manual click-based item selection.
-
-    -   If the scanner fails, users can still click the scanner icon in the search bar to enter a barcode manually.
-<img width="2904" height="1646" alt="image (3)" src="https://github.com/user-attachments/assets/aba76c01-1cdc-48fd-9c5e-814fdfd51e36" />
-
----
-### ZATCA Compliance
-KLiK PoS is fully compliant with ZATCA regulations for B2B and B2C invoices, as well as credit notes. The system has been validated and tested with the [Beveren ZATCA Integration App](https://github.com/Beveren-Software-Inc/zatca_integration).
-
-Saudi retailers can install both applications together to achieve ZATCA Phase 2 compliance effortlessly. KLiK PoS has been successfully adopted by numerous retail businesses, including some of the largest Dates Distributor companies in the Kingdom.
-
-<div align="center">
-	<img src="./docs/screenshots/ZATCA_Compliance.png" alt="Hero Image" width="100%" />
-</div>
-<br />
-
----
-### Under the Hood
-
-- [**React 19**](https://react.dev/) + [**TypeScript**](https://www.typescriptlang.org/)
-- [**Vite**](https://vitejs.dev/) for lightning-fast builds
-- [**Tailwind CSS**](https://tailwindcss.com/) for styling
-- [**Zustand**](https://zustand-demo.pmnd.rs/) for state management
-- [**ERPNext API**](https://frappeframework.com/) integration
-
----
-
-## Production Setup
-
-### Managed Hosting
-Try KLiK PoS on [Frappe Cloud](https://frappecloud.com) for a hassle-free, secure, and scalable deployment.
-
-### Self Hosting
-
-**Step 1:** Install the app using bench
+Run these commands on the **bench server**, from your existing bench directory. Replace `your-site-name` with the site shown by `ls sites` (for example, `site1.local`). The site name is a bench identifier; use your own local URL or IP to access the site.
 
 ```bash
-cd $PATH_TO_YOUR_BENCH
-bench get-app https://github.com/beverensoftware/klik_pos --branch develop
-bench install-app klik_pos
+cd ~/frappe-bench
+ABS_SITE=your-site-name
+
+bench --site "$ABS_SITE" list-apps
+bench --site "$ABS_SITE" backup --with-files
+
+git clone --branch develop https://github.com/ERPNEXT-PAKISTAN/ABS_PoS.git apps/klik_pos
+grep -qxF 'klik_pos' sites/apps.txt || printf '%s\n' 'klik_pos' >> sites/apps.txt
+bench setup requirements --python klik_pos
+bench --site "$ABS_SITE" install-app klik_pos
+bench --site "$ABS_SITE" migrate
+bench build --app klik_pos
+bench --site "$ABS_SITE" clear-cache
+bench --site "$ABS_SITE" list-apps
 ```
 
-**Step 2:** Start your bench
+The explicit clone directory matters: Bench versions may use the Git repository name as the folder name, while this app is installed as `klik_pos`. Do not run the clone if `apps/klik_pos` already exists; use the update instructions below.
+
+The repository contains a built POS frontend. To rebuild it when developing or when required after a source update:
 
 ```bash
-bench start
+cd ~/frappe-bench/apps/klik_pos/klik_spa
+yarn install --frozen-lockfile
+yarn build
+cd ~/frappe-bench
+bench --site "$ABS_SITE" clear-cache
 ```
 
-**Step 3:** Access the POS at `http://your-site:8000/klik_pos`
+After installing or changing Python code, reload your bench's web processes. On a production bench managed by Supervisor, `bench restart` may require the appropriate system permissions. In a development bench, restart the `bench start` process. Refresh the browser with **Ctrl+Shift+R**.
 
----
+## Update an existing ABS or original KLiK installation
 
-## Development Setup
-
-### Backend (Frappe App)
-
-1. [Install Frappe/ERPNext](https://frappeframework.com/docs/v15/user/en/installation)
-2. Install KLiK PoS as above
-3. Run `bench start`
-
-### Frontend (SPA)
-
-1. Clone the SPA repo:
-    ```bash
-    git clone https://github.com/beverensoftware/klik_spa.git
-    cd klik_spa
-    ```
-2. Install dependencies:
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-3. Start the dev server:
-    ```bash
-    npm run dev
-    # or
-    yarn dev
-    ```
-4. Open [http://localhost:5173](http://localhost:5173) in your browser.
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-This app uses `pre-commit` for code formatting and linting.
-Install and enable it:
+These steps preserve the installed app name and existing site data. They also work if your existing checkout's `origin` points to the original KLiK repository: the fork is added as a separate `abs` remote. First review any local changes; do not discard them. Repeat the site backup and migration for each site where `klik_pos` is installed.
 
 ```bash
+cd ~/frappe-bench
+ABS_SITE=your-site-name
+bench --site "$ABS_SITE" list-apps
+bench --site "$ABS_SITE" backup --with-files
+
 cd apps/klik_pos
-pre-commit install
+git status
+git remote -v
+git remote get-url abs || git remote add abs https://github.com/ERPNEXT-PAKISTAN/ABS_PoS.git
+git remote get-url abs
+git fetch abs develop
+git switch develop
+git merge --ff-only abs/develop
+cd ../..
+
+bench setup requirements --python klik_pos
+bench --site "$ABS_SITE" migrate
+bench build --app klik_pos
+bench --site "$ABS_SITE" clear-cache
+bench --site "$ABS_SITE" list-apps
 ```
 
----
+Check that the displayed `abs` remote is the fork URL before merging. If `git status` shows local changes, preserve and resolve them before switching or merging. If the fast-forward merge fails, the histories have diverged; stop and review the changes instead of using `--reset` or `git reset --hard`. If the local branch is not named `develop`, review it before switching. Reload the web processes after updating, as described above.
 
-## Support
+For multiple sites, run `bench --site <site-name> backup --with-files` before updating and `bench --site <site-name> migrate` and `clear-cache` afterward for each installed site. Do not run `install-app` again on a site where `klik_pos` is already installed.
 
-For support and questions, please contact the development team at [info@beverensoftware.com](mailto:info@beverensoftware.com).
+## Open and configure
 
----
+Use your own site host and port. On a local site available at `127.0.0.1`, the routes are:
 
-<div align="center">
-	<a href="https://beverensoftware.com" target="_blank">
-		<img src="./docs/screenshots/beveren-logo.png"" alt="Beveren Software" height="28"/>
-	</a>
-</div>
+- POS: `http://127.0.0.1/abs_pos/pos`
+- Setup: `http://127.0.0.1/abs_pos/setup`
+- Reports: `http://127.0.0.1/abs_pos/reports`
+- Desk workspace: `http://127.0.0.1/desk/klik-pos`
+
+For a development bench, add the configured port, for example `http://127.0.0.1:8000/abs_pos/pos`. The ABS desktop icon opens the POS; use the workspace route to open its Desk links. The workspace route and available shortcuts can depend on the site's Frappe v16 Desk configuration and user permissions.
+
+1. Open **ABS POS Settings** to configure branding and setup information.
+2. Configure a native **POS Profile** with company, warehouse, selling price list, payment methods, assigned cashiers, customer groups where required, and the intended rate, discount, return and credit permissions. Select a print format if desired; an empty selection uses the original Thermal Printer PF.
+3. Open a POS shift, select a customer and check a sale, tax, payment, print and shift closing in a suitable test environment before serving customers.
+4. Item purchase costs, pricing changes, warehouse stock and stock transfers depend on native ERPNext permissions. The stock transfer posts a real submitted Stock Entry when the user selects **Create and submit transfer**.
+
+## Development
+
+The frontend source is in `klik_spa/`; the Frappe app is in `klik_pos/`. From the bench:
+
+```bash
+cd apps/klik_pos/klik_spa
+yarn install --frozen-lockfile
+yarn build
+```
+
+See [deployment and validation notes](docs/abs-pos-milestone-1.md) for implementation details and known acceptance limits. Those milestone notes describe the state at the time they were written and may not cover later changes.
+
+## Attribution and license
+
+ABS PoS is derived from KLiK PoS by Beveren Software Inc. The original project and contributors retain their attribution. This repository includes the [GNU Affero General Public License v3](license.txt); review its terms when distributing or offering a modified version as a network service.

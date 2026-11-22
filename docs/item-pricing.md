@@ -16,14 +16,14 @@ Open an item History popup in ABS PoS and select **Pricing / profit**. The item 
 
 The editable Profit / markup % adds a percentage of cost: `selling net price = unit cost × (1 + markup / 100)`. For cost 100 and markup 30%, the net selling price is 130. That is approximately 23.08% gross margin, not 30% margin or net business profit. Overheads and other expenses are not deducted. The effective gross margin shown uses the rounded selling price.
 
-The default is Latest purchase. Choose Weighted average or Manual when that is the intended pricing basis. Target-UOM cost uses the Item's current conversion factor. Currency prices round half-up to two decimal places, which is displayed in the interface. For currencies or products requiring other price precision, use native Item Price until configurable calculator precision is added.
+The default is Latest purchase. Choose Weighted average or Manual when that is the intended pricing basis. Target-UOM cost uses the Item's current conversion factor. The selling price saved by this calculator rounds half-up to the nearest whole currency unit. For currencies or products requiring fractional prices, use native Item Price until configurable calculator precision is added.
 
 The server recalculates the preview after input changes. Client-provided selling prices are not accepted by the save API. Empty/negative/non-finite numeric inputs and invalid UOMs are rejected.
 
 ## Tax handling
 
 - Tax-exclusive input rates: the calculator saves the net selling price; invoice taxes continue through native ERPNext rules.
-- One ordinary included-in-price On Net Total percentage tax with no Item-specific tax templates: the calculator shows the net target and adds the configured included tax to the stored selling rate. Cost 100 + 30% markup with 15% included tax produces net 130 and stored price 149.50.
+- One ordinary included-in-price On Net Total percentage tax with no Item-specific tax templates: the calculator adds the configured tax to the markup target, rounds the stored price to a whole unit, and derives the effective net price from that rounded amount. Cost 100 + 30% markup with 15% included tax gives a stored price of 150 and an effective net price of 130.43.
 - Compound or Item-specific inclusive tax: preview the net target, but saving is blocked. Use native Item Price and review the actual invoice tax calculation.
 - A price list in another currency is shown separately but not overwritten from company-currency costs. Configure/review conversion in native ERPNext.
 
