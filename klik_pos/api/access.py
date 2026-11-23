@@ -7,7 +7,7 @@ import math
 
 def require_user():
 	if frappe.session.user == 'Guest':
-		frappe.throw(_('Please sign in to use ABS PoS.'), frappe.PermissionError)
+		frappe.throw(_('Please sign in to use ABS POS.'), frappe.PermissionError)
 
 
 def is_manager():

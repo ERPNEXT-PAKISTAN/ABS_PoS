@@ -9,7 +9,7 @@ from frappe import _
 def run_checkout(data, profile, create):
 	request_id = data.get('checkoutRequestId', '')
 	if not isinstance(request_id, str) or not re.fullmatch(r'[a-zA-Z0-9_-]{16,80}', request_id):
-		frappe.throw(_('Checkout request ID is required. Refresh ABS PoS and try again.'))
+		frappe.throw(_('Checkout request ID is required. Refresh ABS POS and try again.'))
 	payload = {k: v for k, v in data.items() if k != 'checkoutRequestId'}
 	digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
 	key = hashlib.sha256(f'{frappe.session.user}:{request_id}'.encode()).hexdigest()

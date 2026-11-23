@@ -32,7 +32,7 @@ export default function ABSSetup() {
   }
   return <section className="space-y-6 text-gray-900 dark:text-gray-100">
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 space-y-4">
-      <h2 className="text-xl font-semibold">ABS PoS setup</h2>
+      <h2 className="text-xl font-semibold">ABS POS setup</h2>
       <p>Configure branding, then check your existing ERPNext company and counter settings.</p>
       {(['business_name', 'logo', 'support_email', 'receipt_footer'] as const).map(field => <label key={field} className="block">
         <span className="block text-sm mb-1">{{ business_name: 'POS name', logo: 'Uploaded logo path (optional)', support_email: 'Support email (optional)', receipt_footer: 'Receipt footer (optional)' }[field]}</span>

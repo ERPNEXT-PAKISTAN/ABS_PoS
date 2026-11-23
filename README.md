@@ -1,6 +1,6 @@
-# ABS PoS
+# ABS POS
 
-ABS PoS is a point-of-sale app for Frappe and ERPNext v16, maintained in [ERPNEXT-PAKISTAN/ABS_PoS](https://github.com/ERPNEXT-PAKISTAN/ABS_PoS). It is based on [KLiK PoS](https://github.com/Beveren-Software-Inc/KLiK_PoS). The repository name is `ABS_PoS`; the internal Frappe app, Python package and bench directory are still named **`klik_pos`**.
+ABS POS is a point-of-sale app for Frappe and ERPNext v16, maintained in [ERPNEXT-PAKISTAN/ABS_PoS](https://github.com/ERPNEXT-PAKISTAN/ABS_PoS). It is based on [KLiK PoS](https://github.com/Beveren-Software-Inc/KLiK_PoS). The repository name is `ABS_PoS`; the internal Frappe app, Python package and bench directory are still named **`klik_pos`**.
 
 ## What is included
 
@@ -20,7 +20,7 @@ The calculator rounds the selling price it saves to the nearest whole currency u
 - Git and the Python, Node.js and Yarn environment required by that bench.
 - Access to the bench and a site backup before installation or update. On production systems, schedule the update and process reload appropriately.
 
-The optional ZATCA integration is separate. ABS PoS can be installed without it; installing ABS PoS alone does not establish ZATCA compliance. Test onboarding, invoice reporting, returns and print formats separately for each Saudi deployment. See [deployment and validation notes](docs/abs-pos-milestone-1.md).
+The optional ZATCA integration is separate. ABS POS can be installed without it; installing ABS POS alone does not establish ZATCA compliance. Test onboarding, invoice reporting, returns and print formats separately for each Saudi deployment. See [deployment and validation notes](docs/abs-pos-milestone-1.md).
 
 ## Install on a new site
 
@@ -156,4 +156,4 @@ See [deployment and validation notes](docs/abs-pos-milestone-1.md) for implement
 
 ## Attribution and license
 
-ABS PoS is derived from KLiK PoS by Beveren Software Inc. The original project and contributors retain their attribution. This repository includes the [GNU Affero General Public License v3](license.txt); review its terms when distributing or offering a modified version as a network service.
+ABS POS is derived from KLiK PoS by Beveren Software Inc. The original project and contributors retain their attribution. This repository includes the [GNU Affero General Public License v3](license.txt); review its terms when distributing or offering a modified version as a network service.

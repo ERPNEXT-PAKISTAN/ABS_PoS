@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"FcIZ54cymf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">ABS PoS</span>\",\"col\":12}},{\"id\":\"r_0-ZqR6Xv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ABS PoS\",\"col\":3}},{\"id\":\"abs-link-0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ABS POS Settings\",\"col\":3}},{\"id\":\"abs-link-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Profile\",\"col\":3}},{\"id\":\"abs-link-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Invoice\",\"col\":3}},{\"id\":\"abs-link-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Opening Entry\",\"col\":3}},{\"id\":\"abs-link-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Closing Entry\",\"col\":3}},{\"id\":\"abs-link-5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"abs-link-6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"abs-link-7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ABS Item Pricing Policy\",\"col\":3}},{\"id\":\"abs-link-8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Personnel\",\"col\":3}}]",
+ "content": "[{\"id\":\"FcIZ54cymf\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">ABS POS</span>\",\"col\":12}},{\"id\":\"r_0-ZqR6Xv\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ABS POS\",\"col\":3}},{\"id\":\"abs-link-0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ABS POS Settings\",\"col\":3}},{\"id\":\"abs-link-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Profile\",\"col\":3}},{\"id\":\"abs-link-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Invoice\",\"col\":3}},{\"id\":\"abs-link-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Opening Entry\",\"col\":3}},{\"id\":\"abs-link-4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Closing Entry\",\"col\":3}},{\"id\":\"abs-link-5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"abs-link-6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"abs-link-7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ABS Item Pricing Policy\",\"col\":3}},{\"id\":\"abs-link-8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Personnel\",\"col\":3}}]",
  "creation": "2025-08-03 17:52:00.628296",
  "custom_blocks": [],
  "docstatus": 0,
@@ -10,7 +10,7 @@
  "idx": 0,
  "indicator_color": "blue",
  "is_hidden": 0,
- "label": "ABS PoS",
+ "label": "ABS POS",
  "links": [],
  "modified": "2025-11-16 15:18:01.653584",
  "modified_by": "Administrator",
@@ -27,7 +27,7 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "ABS PoS",
+   "label": "ABS POS",
    "type": "URL",
    "url": "/abs_pos/pos"
   },
@@ -86,6 +86,6 @@
    "doc_view": "List"
   }
  ],
- "title": "ABS PoS",
+ "title": "ABS POS",
  "type": "Workspace"
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 export interface Branding { business_name: string; logo: string; support_email: string; receipt_footer: string }
-const defaults: Branding = { business_name: 'ABS PoS', logo: '', support_email: '', receipt_footer: '' };
+const defaults: Branding = { business_name: 'ABS POS', logo: '', support_email: '', receipt_footer: '' };
 export function useBranding() {
   const [branding, setBranding] = useState(defaults);
   useEffect(() => {

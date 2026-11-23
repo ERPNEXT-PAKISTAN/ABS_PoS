@@ -15,7 +15,7 @@
    "fieldname": "business_name",
    "label": "POS Name",
    "fieldtype": "Data",
-   "default": "ABS PoS",
+   "default": "ABS POS",
    "reqd": 1
   },
   {

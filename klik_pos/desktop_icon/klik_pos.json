@@ -1,0 +1,16 @@
+{
+ "app": "klik_pos",
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon_type": "Link",
+ "idx": 2,
+ "label": "Klik POS",
+ "link_to": "Klik POS",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-11-23 00:00:00",
+ "name": "Klik POS",
+ "owner": "Administrator",
+ "parent_icon": "POS",
+ "roles": [],
+ "standard": 1
+}

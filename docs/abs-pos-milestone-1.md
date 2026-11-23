@@ -1,4 +1,4 @@
-# ABS PoS foundation — milestone 1
+# ABS POS foundation — milestone 1
 
 ## Delivery
 

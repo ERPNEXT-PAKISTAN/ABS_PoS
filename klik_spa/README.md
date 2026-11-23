@@ -1,4 +1,4 @@
-# KLiK PoS
+# ABS POS
 
 A modern, responsive Point of Sale System built with React, TypeScript, and Vite. Designed for retail businesses with both desktop and mobile interfaces.
 

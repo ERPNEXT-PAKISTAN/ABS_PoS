@@ -1,6 +1,6 @@
 {
-  "name": "ABS PoS",
-  "short_name": "ABS PoS",
+  "name": "ABS POS",
+  "short_name": "ABS POS",
   "description": "ABS Point of Sale",
   "start_url": "/abs_pos/pos",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/assets/klik_pos/klik_spa/abs-logo.svg",
+      "src": "/assets/klik_pos/icons/desktop_icons/subtle/pos.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

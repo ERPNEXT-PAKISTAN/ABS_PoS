@@ -1,0 +1,16 @@
+{
+ "app": "klik_pos",
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon_image": "/assets/klik_pos/icons/desktop_icons/subtle/pos.svg",
+ "icon_type": "App",
+ "label": "POS",
+ "link": "/abs_pos/pos",
+ "link_type": "External",
+ "logo_url": "/assets/klik_pos/icons/desktop_icons/subtle/pos.svg",
+ "modified": "2026-11-23 00:00:00",
+ "name": "POS",
+ "owner": "Administrator",
+ "roles": [],
+ "standard": 1
+}

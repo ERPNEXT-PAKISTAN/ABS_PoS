@@ -128,7 +128,7 @@ export default function LoginPage() {
           {/* Logo Section */}
           <div className="text-center mb-6">
             <div className="flex justify-center mb-4">
-              <img src={branding.logo || "/assets/klik_pos/klik_spa/abs-logo.svg"} alt={branding.business_name} className="w-16 h-16 rounded-full shadow-lg" />
+              <img src={branding.logo || "/assets/klik_pos/icons/desktop_icons/subtle/pos.svg"} alt={branding.business_name} className="w-16 h-16 shadow-lg" />
             </div>
             <h1 className="text-3xl font-bold text-beveren-800">{branding.business_name}</h1>
           </div>

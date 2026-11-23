@@ -50,7 +50,7 @@ export default function SettingsPage() {
   }
 
   const settingsSections = [
-    { id: "setup", title: "ABS PoS Setup", icon: Settings, description: "Branding, counter readiness and optional ZATCA" },
+    { id: "setup", title: "ABS POS Setup", icon: Settings, description: "Branding, counter readiness and optional ZATCA" },
     {
       id: "profile",
       title: "Profile Information",

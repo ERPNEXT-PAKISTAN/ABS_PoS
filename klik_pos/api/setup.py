@@ -22,7 +22,7 @@ def zatca_state(company):
 def get_branding():
 	# Only non-sensitive display settings; no company, account or cashier details.
 	doc = frappe.get_single('ABS POS Settings')
-	return {'business_name': doc.business_name or 'ABS PoS', 'logo': doc.logo or '', 'support_email': doc.support_email or '', 'receipt_footer': doc.receipt_footer or ''}
+	return {'business_name': doc.business_name or 'ABS POS', 'logo': doc.logo or '', 'support_email': doc.support_email or '', 'receipt_footer': doc.receipt_footer or ''}
 
 
 @frappe.whitelist()

@@ -43,9 +43,9 @@ export default function RetailSidebar() {
           onClick={() => navigate("/")}
         >
           <img
-            src={branding.logo || "/assets/klik_pos/klik_spa/abs-logo.svg"}
+            src={branding.logo || "/assets/klik_pos/icons/desktop_icons/subtle/pos.svg"}
             alt={branding.business_name}
-            className="w-12 h-12 rounded-full object-cover"
+            className="w-12 h-12 object-cover"
           />
         </div>
 

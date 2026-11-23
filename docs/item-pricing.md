@@ -1,6 +1,6 @@
 # Item purchase costs and profit calculator
 
-Open an item History popup in ABS PoS and select **Pricing / profit**. The item card or cart UOM is selected initially. Costs are shown in company currency per stock UOM; choose another configured UOM for the proposed selling price.
+Open an item History popup in ABS POS and select **Pricing / profit**. The item card or cart UOM is selected initially. Costs are shown in company currency per stock UOM; choose another configured UOM for the proposed selling price.
 
 ## Purchase costs
 

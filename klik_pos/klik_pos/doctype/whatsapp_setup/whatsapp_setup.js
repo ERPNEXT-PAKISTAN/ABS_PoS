@@ -95,7 +95,7 @@ function send_test_message(frm) {
 				label: __("Test Message"),
 				description: __("Enter a test message to send"),
 				reqd: 1,
-				default: "Hello! This is a test message from KLiK PoS WhatsApp integration.",
+				default: "Hello! This is a test message from ABS POS WhatsApp integration.",
 			},
 		],
 		primary_action_label: __("Send Test"),

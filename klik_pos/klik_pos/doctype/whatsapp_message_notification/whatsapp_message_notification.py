@@ -15,7 +15,7 @@ from klik_pos.api.whatsap.utils import send_whatsapp_message
 
 
 class WhatsAppMessageNotification(Document):
-	"""WhatsApp Message Notification for KLiK PoS"""
+	"""WhatsApp Message Notification for ABS POS"""
 
 	def validate(self):
 		"""Validate the notification configuration"""
